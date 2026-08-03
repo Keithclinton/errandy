@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: errandy
+      POSTGRES_PASSWORD: errandy
+      POSTGRES_DB: errandy_dev
+    ports:
+      - "5434:5432"
+    volumes:
+      - errandy_pgdata:/var/lib/postgresql/data
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql
+
+volumes:
+  errandy_pgdata:

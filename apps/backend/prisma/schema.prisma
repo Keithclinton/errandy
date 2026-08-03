@@ -1,0 +1,268 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum KycStatus {
+  none
+  pending
+  verified
+  rejected
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum ListingStatus {
+  open
+  closed
+  completed
+}
+
+enum BidStatus {
+  pending
+  accepted
+  declined
+  withdrawn
+}
+
+enum ReportTargetType {
+  user
+  listing
+  message
+}
+
+enum ReportReason {
+  spam
+  scam
+  harassment
+  inappropriate_content
+  no_show
+  other
+}
+
+enum ReportStatus {
+  open
+  reviewed
+  actioned
+  dismissed
+}
+
+enum NotificationType {
+  bid_received
+  bid_accepted
+  bid_declined
+  new_message
+  please_rate
+  report_resolved
+}
+
+enum AnalyticsEventType {
+  listing_created
+  bid_placed
+  chat_started
+  contact_shared
+  listing_completed
+  rating_left
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?
+  googleId        String?   @unique
+  name            String
+  phone           String?
+  avatarUrl       String?
+  kycStatus       KycStatus @default(none)
+  isAdmin         Boolean   @default(false)
+  status          UserStatus @default(active)
+  ratingAvg       Float     @default(0)
+  ratingCount     Int       @default(0)
+  acceptedTermsAt DateTime?
+  termsVersion    String?
+  createdAt       DateTime  @default(now())
+
+  refreshTokenHash       String?
+  refreshTokenExpiresAt  DateTime?
+  passwordResetTokenHash String?
+  passwordResetExpiresAt DateTime?
+
+  kycVerifications   KycVerification[]
+  listings           Listing[]        @relation("ListingOwner")
+  bids               Bid[]            @relation("Bidder")
+  sentMessages       Message[]        @relation("MessageSender")
+  ratingsGiven       Rating[]         @relation("Rater")
+  ratingsReceived    Rating[]         @relation("Ratee")
+  reportsFiled       Report[]         @relation("Reporter")
+  reportsReviewed    Report[]         @relation("ReviewedBy")
+  notifications      Notification[]
+  analyticsEvents    AnalyticsEvent[]
+
+  @@map("users")
+}
+
+model KycVerification {
+  id          String    @id @default(cuid())
+  userId      String
+  smileJobId  String?
+  status      KycStatus @default(pending)
+  result      Json?
+  consentAt   DateTime
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("kyc_verifications")
+}
+
+model Listing {
+  id             String        @id @default(cuid())
+  ownerId        String
+  title          String
+  description    String
+  category       String
+  location       String
+  budget         Decimal?      @db.Decimal(10, 2)
+  imageUrls      String[]
+  status         ListingStatus @default(open)
+  acceptedBidId  String?       @unique
+  completedAt    DateTime?
+  createdAt      DateTime      @default(now())
+
+  owner         User           @relation("ListingOwner", fields: [ownerId], references: [id])
+  bids          Bid[]
+  acceptedBid   Bid?           @relation("AcceptedBid", fields: [acceptedBidId], references: [id])
+  conversations Conversation[]
+  ratings       Rating[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([category])
+  @@map("listings")
+}
+
+model Bid {
+  id        String    @id @default(cuid())
+  listingId String
+  bidderId  String
+  amount    Decimal   @db.Decimal(10, 2)
+  message   String?
+  status    BidStatus @default(pending)
+  createdAt DateTime  @default(now())
+
+  listing        Listing  @relation(fields: [listingId], references: [id])
+  bidder         User     @relation("Bidder", fields: [bidderId], references: [id])
+  acceptedFor    Listing? @relation("AcceptedBid")
+
+  @@index([listingId])
+  @@index([bidderId])
+  @@map("bids")
+}
+
+model Conversation {
+  id             String   @id @default(cuid())
+  listingId      String
+  participantIds String[]
+  createdAt      DateTime @default(now())
+
+  listing  Listing   @relation(fields: [listingId], references: [id])
+  messages Message[]
+
+  @@index([listingId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  createdAt      DateTime  @default(now())
+  readAt         DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  sender       User          @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  listingId String
+  raterId   String
+  rateeId   String
+  stars     Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id])
+  rater   User    @relation("Rater", fields: [raterId], references: [id])
+  ratee   User    @relation("Ratee", fields: [rateeId], references: [id])
+
+  @@unique([listingId, raterId])
+  @@index([rateeId])
+  @@map("ratings")
+}
+
+model Report {
+  id         String           @id @default(cuid())
+  reporterId String
+  targetType ReportTargetType
+  targetId   String
+  reason     ReportReason
+  details    String?
+  status     ReportStatus     @default(open)
+  reviewedBy String?
+  createdAt  DateTime         @default(now())
+
+  reporter       User  @relation("Reporter", fields: [reporterId], references: [id])
+  reviewedByUser User? @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+
+  @@index([status])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  title      String
+  body       String
+  entityType String
+  entityId   String
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model AnalyticsEvent {
+  id         String             @id @default(cuid())
+  userId     String?
+  type       AnalyticsEventType
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime           @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([type])
+  @@index([createdAt])
+  @@map("analytics_events")
+}

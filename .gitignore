@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.turbo/
+.next/
+out/
+
+# NestJS backend
+apps/backend/dist/
+apps/backend/.env
+apps/backend/.env.*
+!apps/backend/.env.example
+!apps/backend/.env.test
+
+# Prisma
+apps/backend/prisma/*.db
+apps/backend/generated/
+
+# Frontend
+apps/frontend/dist/
+apps/frontend/.env
+apps/frontend/.env.*
+!apps/frontend/.env.example
+
+# Env files (never commit secrets: DB URL, JWT secrets, Google OAuth creds, Smile ID keys, Resend key)
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing / coverage
+coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
