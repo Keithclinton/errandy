@@ -15,6 +15,11 @@ export class ChatController {
     return this.chatService.getOrCreateConversation(listingId, user.id, withUserId);
   }
 
+  @Get("conversations")
+  listForUser(@CurrentUser() user: AuthUser) {
+    return this.chatService.listForUser(user.id);
+  }
+
   @Get("conversations/:id/messages")
   listMessages(@CurrentUser() user: AuthUser, @Param("id") id: string, @Query("since") since?: string) {
     return this.chatService.listMessages(id, user.id, since);

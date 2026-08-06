@@ -29,10 +29,14 @@ export class EmailService {
   }
 
   async sendPasswordReset(to: string, resetToken: string) {
+    const frontendUrl = this.config.get<string>("CORS_ORIGIN") ?? "http://localhost:5173";
+    const resetUrl = new URL("/reset-password", frontendUrl);
+    resetUrl.searchParams.set("token", resetToken);
     await this.send(
       to,
       "Reset your Errandy password",
-      `<p>Use this token to reset your password: <code>${resetToken}</code></p>
+      `<p><a href="${resetUrl.toString()}">Reset your password</a></p>
+       <p>Or use this token directly: <code>${resetToken}</code></p>
        <p>This link expires in 1 hour. If you didn't request this, ignore this email.</p>`,
     );
   }

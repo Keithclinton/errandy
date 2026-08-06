@@ -24,6 +24,11 @@ export class QueryListingsDto {
   @IsString()
   search?: string;
 
+  @ApiProperty({ required: false, description: "Filter to a specific owner's listings (e.g. \"my listings\")" })
+  @IsOptional()
+  @IsString()
+  ownerId?: string;
+
   @ApiProperty({ required: false, default: 1 })
   @IsOptional()
   @Type(() => Number)

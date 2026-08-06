@@ -53,12 +53,64 @@ export class ChatService {
 
   async listMessages(conversationId: string, userId: string, since?: string) {
     await this.assertParticipant(conversationId, userId);
-    return this.prisma.message.findMany({
+    const messages = await this.prisma.message.findMany({
       where: {
         conversationId,
         ...(since && { createdAt: { gt: new Date(since) } }),
       },
       orderBy: { createdAt: "asc" },
+    });
+    // Viewing the thread is what "reads" it — mark the counterpart's messages as seen.
+    await this.prisma.message.updateMany({
+      where: { conversationId, senderId: { not: userId }, readAt: null },
+      data: { readAt: new Date() },
+    });
+    return messages;
+  }
+
+  async listForUser(userId: string) {
+    const conversations = await this.prisma.conversation.findMany({
+      where: { participantIds: { has: userId } },
+      include: { listing: { select: { id: true, title: true } } },
+    });
+
+    const counterpartIds = conversations
+      .map((c) => c.participantIds.find((id) => id !== userId))
+      .filter((id): id is string => !!id);
+    const counterparts = await this.prisma.user.findMany({
+      where: { id: { in: counterpartIds } },
+      select: { id: true, name: true, avatarUrl: true },
+    });
+    const counterpartMap = new Map(counterparts.map((u) => [u.id, u]));
+
+    const results = await Promise.all(
+      conversations.map(async (conversation) => {
+        const counterpartId = conversation.participantIds.find((id) => id !== userId);
+        const [lastMessage, unreadCount] = await Promise.all([
+          this.prisma.message.findFirst({
+            where: { conversationId: conversation.id },
+            orderBy: { createdAt: "desc" },
+          }),
+          this.prisma.message.count({
+            where: { conversationId: conversation.id, senderId: { not: userId }, readAt: null },
+          }),
+        ]);
+        return {
+          id: conversation.id,
+          listingId: conversation.listingId,
+          listingTitle: conversation.listing.title,
+          counterpart: counterpartId ? (counterpartMap.get(counterpartId) ?? null) : null,
+          lastMessage,
+          unreadCount,
+          createdAt: conversation.createdAt,
+        };
+      }),
+    );
+
+    return results.sort((a, b) => {
+      const aTime = (a.lastMessage?.createdAt ?? a.createdAt).getTime();
+      const bTime = (b.lastMessage?.createdAt ?? b.createdAt).getTime();
+      return bTime - aTime;
     });
   }
 

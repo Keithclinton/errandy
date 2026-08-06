@@ -34,6 +34,25 @@ export class BidsService {
     return bid;
   }
 
+  async listMine(bidderId: string) {
+    return this.prisma.bid.findMany({
+      where: { bidderId },
+      orderBy: { createdAt: "desc" },
+      include: { listing: { select: { id: true, title: true, status: true, ownerId: true } } },
+    });
+  }
+
+  async listReceived(ownerId: string) {
+    return this.prisma.bid.findMany({
+      where: { listing: { ownerId } },
+      orderBy: { createdAt: "desc" },
+      include: {
+        listing: { select: { id: true, title: true, status: true } },
+        bidder: { select: { id: true, name: true, avatarUrl: true, ratingAvg: true, ratingCount: true } },
+      },
+    });
+  }
+
   async withdraw(bidId: string, userId: string) {
     const bid = await this.prisma.bid.findUnique({ where: { id: bidId } });
     if (!bid) throw new NotFoundException("Bid not found");

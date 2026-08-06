@@ -26,6 +26,7 @@ apps/frontend/dist/
 apps/frontend/.env
 apps/frontend/.env.*
 !apps/frontend/.env.example
+*.tsbuildinfo
 
 # Env files (never commit secrets: DB URL, JWT secrets, Google OAuth creds, Smile ID keys, Resend key)
 .env

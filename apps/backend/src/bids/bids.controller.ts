@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
 import { VerifiedGuard } from "../common/guards/verified.guard";
@@ -15,6 +15,16 @@ export class BidsController {
   @Post("listings/:listingId/bids")
   place(@CurrentUser() user: AuthUser, @Param("listingId") listingId: string, @Body() dto: CreateBidDto) {
     return this.bidsService.place(listingId, user.id, dto);
+  }
+
+  @Get("bids/mine")
+  listMine(@CurrentUser() user: AuthUser) {
+    return this.bidsService.listMine(user.id);
+  }
+
+  @Get("bids/received")
+  listReceived(@CurrentUser() user: AuthUser) {
+    return this.bidsService.listReceived(user.id);
   }
 
   @Patch("bids/:id/withdraw")

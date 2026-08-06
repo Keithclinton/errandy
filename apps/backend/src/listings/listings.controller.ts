@@ -40,8 +40,10 @@ export class ListingsController {
   }
 
   @ApiBearerAuth()
-  @Post(":id/upload-url")
+  @Post("upload-url")
   requestUploadUrl(@CurrentUser() user: AuthUser, @Body() dto: RequestUploadUrlDto) {
+    // Not nested under a listing id: images are uploaded before the listing exists
+    // (client uploads directly to Blob, then submits the resulting URLs on create).
     return this.listingsService.requestUploadUrl(user.id, dto);
   }
 
