@@ -1,7 +1,8 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AdminRoute } from "@/components/layout/AdminRoute";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 
 import Landing from "@/pages/Landing";
 import Feed from "@/pages/Feed";
@@ -56,12 +57,15 @@ export default function App() {
           <Route path="/chat/:conversationId" element={<Thread />} />
         </Route>
 
-        {/* Admin */}
-        <Route element={<AdminRoute />}>
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/users/:id" element={<AdminUserDetail />} />
-          <Route path="/admin/reports" element={<AdminReports />} />
-          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+        {/* Admin — its own section at /admin, on the same domain */}
+        <Route path="/admin" element={<AdminRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/users" replace />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="users/:id" element={<AdminUserDetail />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<NotFound />} />

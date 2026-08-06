@@ -73,7 +73,7 @@ export function AppShell() {
                     </DropdownMenuItem>
                     {user.isAdmin && (
                       <DropdownMenuItem asChild>
-                        <Link to="/admin/users">
+                        <Link to="/admin">
                           <LayoutDashboard className="mr-2 h-4 w-4" /> Admin
                         </Link>
                       </DropdownMenuItem>
