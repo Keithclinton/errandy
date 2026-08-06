@@ -20,7 +20,7 @@ export default function GoogleCallback() {
       return;
     }
     applyTokens(accessToken, refreshToken)
-      .then(() => navigate("/", { replace: true }))
+      .then(() => navigate("/browse", { replace: true }))
       .catch(() => setError(true));
   }, [applyTokens, navigate, searchParams]);
 

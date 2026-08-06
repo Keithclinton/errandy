@@ -10,6 +10,7 @@ import { AuthLayout } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -32,7 +33,7 @@ export default function Login() {
     setError(null);
     try {
       await login(values.email, values.password);
-      const from = (location.state as { from?: Location })?.from?.pathname ?? "/";
+      const from = (location.state as { from?: Location })?.from?.pathname ?? "/browse";
       navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
@@ -58,16 +59,18 @@ export default function Login() {
           <Input id="email" type="email" autoComplete="email" {...register("email")} />
           {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+        <PasswordField
+          id="password"
+          label="Password"
+          labelExtra={
             <Link to="/forgot-password" className="text-xs text-primary hover:underline">
               Forgot password?
             </Link>
-          </div>
-          <Input id="password" type="password" autoComplete="current-password" {...register("password")} />
-          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-        </div>
+          }
+          autoComplete="current-password"
+          registration={register("password")}
+          error={errors.password?.message}
+        />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Logging in…" : "Log in"}

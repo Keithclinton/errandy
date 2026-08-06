@@ -6,6 +6,6 @@ export function AdminRoute() {
 
   if (isLoading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.isAdmin) return <Navigate to="/" replace />;
+  if (!user.isAdmin) return <Navigate to="/browse" replace />;
   return <Outlet />;
 }

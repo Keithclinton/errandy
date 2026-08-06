@@ -45,7 +45,7 @@ export default function Verify() {
               <p className="font-medium">You're verified</p>
               <p className="text-sm text-muted-foreground">You can post errands and place bids.</p>
               <Button asChild className="mt-2">
-                <Link to="/">Back to home</Link>
+                <Link to="/browse">Back to home</Link>
               </Button>
             </div>
           )}

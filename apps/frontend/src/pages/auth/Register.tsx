@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -38,7 +39,7 @@ export default function Register() {
     setError(null);
     try {
       await registerUser({ ...values, termsVersion: TERMS_VERSION });
-      navigate("/", { replace: true });
+      navigate("/browse", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
     }
@@ -72,11 +73,13 @@ export default function Register() {
           <Label htmlFor="phone">Phone (optional)</Label>
           <Input id="phone" type="tel" autoComplete="tel" {...register("phone")} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" autoComplete="new-password" {...register("password")} />
-          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-        </div>
+        <PasswordField
+          id="password"
+          label="Password"
+          autoComplete="new-password"
+          registration={register("password")}
+          error={errors.password?.message}
+        />
         <div className="flex items-start gap-2">
           <Controller
             name="acceptedTerms"

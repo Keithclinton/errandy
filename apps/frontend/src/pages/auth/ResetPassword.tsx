@@ -8,6 +8,7 @@ import { AuthLayout } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 const schema = z
   .object({
@@ -63,16 +64,20 @@ export default function ResetPassword() {
           <Input id="token" {...register("token")} />
           {errors.token && <p className="text-sm text-destructive">{errors.token.message}</p>}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="newPassword">New password</Label>
-          <Input id="newPassword" type="password" autoComplete="new-password" {...register("newPassword")} />
-          {errors.newPassword && <p className="text-sm text-destructive">{errors.newPassword.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
-          <Input id="confirmPassword" type="password" autoComplete="new-password" {...register("confirmPassword")} />
-          {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
-        </div>
+        <PasswordField
+          id="newPassword"
+          label="New password"
+          autoComplete="new-password"
+          registration={register("newPassword")}
+          error={errors.newPassword?.message}
+        />
+        <PasswordField
+          id="confirmPassword"
+          label="Confirm password"
+          autoComplete="new-password"
+          registration={register("confirmPassword")}
+          error={errors.confirmPassword?.message}
+        />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Resetting…" : "Reset password"}

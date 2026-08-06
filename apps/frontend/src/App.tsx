@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AdminRoute } from "@/components/layout/AdminRoute";
 
+import Landing from "@/pages/Landing";
 import Feed from "@/pages/Feed";
 import ListingDetail from "@/pages/ListingDetail";
 import CreateListing from "@/pages/CreateListing";
@@ -33,7 +34,8 @@ export default function App() {
     <Routes>
       <Route element={<AppShell />}>
         {/* Public */}
-        <Route path="/" element={<Feed />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/browse" element={<Feed />} />
         <Route path="/listings/:id" element={<ListingDetail />} />
         <Route path="/users/:id" element={<Profile />} />
         <Route path="/login" element={<Login />} />

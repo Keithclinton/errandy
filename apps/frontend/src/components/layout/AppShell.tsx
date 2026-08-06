@@ -15,7 +15,7 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
-  { to: "/", label: "Home", icon: Home, end: true },
+  { to: "/browse", label: "Home", icon: Home, end: true },
   { to: "/listings/new", label: "Post", icon: PlusCircle },
   { to: "/my-activity", label: "Activity", icon: ListChecks },
   { to: "/chat", label: "Chat", icon: MessageCircle },
@@ -36,13 +36,16 @@ export function AppShell() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="container flex h-14 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 font-semibold text-primary">
+          <Link to={user ? "/browse" : "/"} className="flex items-center gap-2 font-semibold text-primary">
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground">
               E
             </span>
             Errandy
           </Link>
           <div className="flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Link to="/browse">Browse</Link>
+            </Button>
             {user ? (
               <>
                 <NotificationBell />
