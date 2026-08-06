@@ -17,7 +17,7 @@ const steps = [
   {
     icon: ClipboardList,
     title: "Post an errand",
-    body: "Describe what you need done — pick up groceries, move a couch, wait in line, anything local.",
+    body: "Describe what you need done, whether it's picking up groceries, moving a couch, or waiting in line.",
   },
   {
     icon: Handshake,
@@ -45,7 +45,7 @@ const features = [
   {
     icon: MapPin,
     title: "Built for local",
-    body: "Filter by category and location to find errands — or bidders — near you.",
+    body: "Filter by category and location to find errands or bidders near you.",
   },
   {
     icon: Wallet,
@@ -70,14 +70,11 @@ export default function Landing() {
       {/* Hero */}
       <section className="-mx-4 -mt-6 bg-secondary px-4 pb-16 pt-16 sm:-mx-6 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            Now live
-          </span>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
             Post errands. Bid on them. <span className="text-primary">Get things done.</span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Errandy is a marketplace where people help each other with everyday tasks — post what you
+            Errandy is a marketplace where people help each other with everyday tasks. Post what you
             need done, bid on errands nearby, chat to agree on terms, and get it done.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -144,7 +141,7 @@ export default function Landing() {
       <section className="rounded-xl bg-secondary px-6 py-12 text-center">
         <h2 className="text-2xl font-semibold">Ready to get something done?</h2>
         <p className="mt-2 text-muted-foreground">
-          Sign up in under a minute — verification only happens once you're ready to post or bid.
+          Sign up in under a minute. Verification only happens once you're ready to post or bid.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Button asChild size="lg">
