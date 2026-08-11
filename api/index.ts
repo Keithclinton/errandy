@@ -23,7 +23,19 @@ function ensureBootstrapped(): Promise<void> {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  await ensureBootstrapped();
+  try {
+    await ensureBootstrapped();
+  } catch (err) {
+    // Don't cache a failed bootstrap forever — let the next request retry
+    // (e.g. after an env var fix, without needing a fresh deploy).
+    bootstrap = null;
+    console.error("Nest bootstrap failed:", err);
+    res.status(500).json({
+      error: "bootstrap_failed",
+      message: err instanceof Error ? err.message : String(err),
+    });
+    return;
+  }
   // This function is reached via the /api/(.*) rewrite in vercel.json, so the
   // incoming path still has the "/api" prefix (e.g. "/api/auth/login"). Nest's
   // routes are unprefixed (e.g. "/auth/login") — same as local dev — so strip it
