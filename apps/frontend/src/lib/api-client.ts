@@ -20,7 +20,14 @@ interface RequestOptions {
 }
 
 function buildUrl(path: string, params?: RequestOptions["params"]): string {
-  const url = new URL(path, BASE_URL);
+  // BASE_URL may be relative (e.g. "/api" for a same-origin deployment). A leading-"/"
+  // path passed as the URL constructor's first arg replaces the *entire* path of its
+  // base rather than appending to it, so join the strings first and only then parse —
+  // that way "/api" + "/auth/register" becomes "/api/auth/register", not "/auth/register".
+  const isAbsolute = /^https?:\/\//.test(BASE_URL);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const combined = `${BASE_URL.replace(/\/$/, "")}${normalizedPath}`;
+  const url = isAbsolute ? new URL(combined) : new URL(combined, window.location.origin);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
