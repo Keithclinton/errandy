@@ -74,7 +74,7 @@ export default function Landing() {
             Post errands. Bid on them. <span className="text-primary">Get things done.</span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Errandy is a marketplace where people help each other with everyday tasks. Post what you
+            Errandspot is a marketplace where people help each other with everyday tasks. Post what you
             need done, bid on errands nearby, chat to agree on terms, and get it done.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -116,10 +116,10 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Why Errandy */}
+      {/* Why Errandspot */}
       <section>
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-semibold">Why Errandy</h2>
+          <h2 className="text-2xl font-semibold">Why Errandspot</h2>
           <p className="mt-2 text-muted-foreground">Safety and simplicity, built in from the start.</p>
         </div>
         <div className="mt-10 grid gap-6 sm:grid-cols-2">

@@ -11,7 +11,7 @@ export default function Privacy() {
       <p className="text-sm">
         Account details (name, email, phone), listing and bid content, chat messages, and — during
         one-time identity verification — a government ID and selfie, processed by our verification
-        partner. Errandy does not store your raw ID images itself.
+        partner. Errandspot does not store your raw ID images itself.
       </p>
 
       <h2 className="text-lg font-medium">2. How we use it</h2>

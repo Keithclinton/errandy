@@ -17,7 +17,7 @@ export class EmailService {
   ) {
     const apiKey = this.config.get<string>("RESEND_API_KEY");
     this.resend = apiKey ? new Resend(apiKey) : null;
-    this.fromEmail = this.config.get<string>("RESEND_FROM_EMAIL") ?? "notifications@errandy.app";
+    this.fromEmail = this.config.get<string>("RESEND_FROM_EMAIL") ?? "notifications@errandspot.app";
   }
 
   private async send(to: string, subject: string, html: string) {
@@ -34,7 +34,7 @@ export class EmailService {
     resetUrl.searchParams.set("token", resetToken);
     await this.send(
       to,
-      "Reset your Errandy password",
+      "Reset your Errandspot password",
       `<p><a href="${resetUrl.toString()}">Reset your password</a></p>
        <p>Or use this token directly: <code>${resetToken}</code></p>
        <p>This link expires in 1 hour. If you didn't request this, ignore this email.</p>`,
@@ -44,7 +44,7 @@ export class EmailService {
   async sendBidReceived(to: string, listingTitle: string, amount: string) {
     await this.send(
       to,
-      "You received a new bid on Errandy",
+      "You received a new bid on Errandspot",
       `<p>You received a bid of <strong>${amount}</strong> on "${listingTitle}".</p>`,
     );
   }
@@ -52,7 +52,7 @@ export class EmailService {
   async sendBidAccepted(to: string, listingTitle: string) {
     await this.send(
       to,
-      "Your bid was accepted on Errandy",
+      "Your bid was accepted on Errandspot",
       `<p>Your bid on "${listingTitle}" was accepted. Open the chat to arrange the details.</p>`,
     );
   }
@@ -60,7 +60,7 @@ export class EmailService {
   async sendUnreadMessagesDigest(to: string, unreadCount: number) {
     await this.send(
       to,
-      "You have unread messages on Errandy",
+      "You have unread messages on Errandspot",
       `<p>You have ${unreadCount} unread message(s) waiting for you.</p>`,
     );
   }

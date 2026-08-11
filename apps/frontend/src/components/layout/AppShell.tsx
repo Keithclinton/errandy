@@ -40,7 +40,7 @@ export function AppShell() {
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground">
               E
             </span>
-            Errandy
+            Errandspot
           </Link>
           <div className="flex items-center gap-1">
             <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">

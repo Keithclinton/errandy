@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "apple-touch-icon.png"],
       manifest: {
-        name: "Errandy",
-        short_name: "Errandy",
+        name: "Errandspot",
+        short_name: "Errandspot",
         description: "Post errands, bid on them, and get things done.",
         theme_color: "#0284c7",
         background_color: "#ffffff",

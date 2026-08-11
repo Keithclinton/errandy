@@ -35,7 +35,7 @@ export default function Verify() {
           <ShieldCheck className="mb-2 h-10 w-10 text-primary" />
           <CardTitle>Identity verification</CardTitle>
           <CardDescription>
-            A one-time government ID + selfie check keeps everyone on Errandy accountable.
+            A one-time government ID + selfie check keeps everyone on Errandspot accountable.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -72,12 +72,12 @@ export default function Verify() {
             <>
               <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
                 The ID + selfie capture step will appear here once verification starts. It's handled by our
-                verification partner — Errandy never stores your raw ID images.
+                verification partner — Errandspot never stores your raw ID images.
               </div>
               <div className="flex items-start gap-2">
                 <Checkbox id="consent" checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
                 <Label htmlFor="consent" className="text-sm font-normal leading-snug">
-                  I consent to my government ID and a selfie being processed by Errandy's verification
+                  I consent to my government ID and a selfie being processed by Errandspot's verification
                   partner for the purpose of identity verification.
                 </Label>
               </div>

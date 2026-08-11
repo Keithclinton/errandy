@@ -47,7 +47,7 @@ export function ReportDialog({
     }
     try {
       await createReport.mutateAsync({ targetType, targetId, reason, details: details || undefined });
-      toast.success("Report submitted. Thanks for helping keep Errandy safe.");
+      toast.success("Report submitted. Thanks for helping keep Errandspot safe.");
       setOpen(false);
       setReason("");
       setDetails("");

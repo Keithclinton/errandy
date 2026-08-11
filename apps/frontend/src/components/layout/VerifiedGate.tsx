@@ -17,7 +17,7 @@ export function VerifiedGate({ children }: { children: React.ReactNode }) {
         <CardDescription>
           {user?.kycStatus === "pending"
             ? "Your verification is being reviewed. This usually only takes a moment — check back shortly."
-            : "Errandy requires a one-time ID + selfie check before you can post or bid, to keep the marketplace safe."}
+            : "Errandspot requires a one-time ID + selfie check before you can post or bid, to keep the marketplace safe."}
         </CardDescription>
       </CardHeader>
       <CardContent>

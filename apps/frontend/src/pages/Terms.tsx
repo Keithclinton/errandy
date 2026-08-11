@@ -9,7 +9,7 @@ export default function Terms() {
 
       <h2 className="text-lg font-medium">1. The service</h2>
       <p className="text-sm">
-        Errandy is a marketplace where users post errands and bid on each other's. Errandy is not a party to
+        Errandspot is a marketplace where users post errands and bid on each other's. Errandspot is not a party to
         any agreement between an errand poster and a bidder, and does not process payment for completed
         errands — those arrangements are made directly between users.
       </p>
@@ -35,7 +35,7 @@ export default function Terms() {
 
       <h2 className="text-lg font-medium">5. Liability</h2>
       <p className="text-sm">
-        Errandy provides the platform "as is" and is not responsible for the quality, safety, or legality of
+        Errandspot provides the platform "as is" and is not responsible for the quality, safety, or legality of
         errands arranged through it.
       </p>
     </article>
