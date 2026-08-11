@@ -5,7 +5,7 @@ import express from "express";
 // injection. Building via `nest build` first (see vercel.json's buildCommand) produces
 // correctly-compiled JS that already has the metadata baked in, sidestepping the issue.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createApp } = require("../dist/create-app") as typeof import("../src/create-app");
+const { createApp } = require("../apps/backend/dist/create-app") as typeof import("../apps/backend/src/create-app");
 
 const server = express();
 
@@ -24,5 +24,12 @@ function ensureBootstrapped(): Promise<void> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureBootstrapped();
+  // This function is reached via the /api/(.*) rewrite in vercel.json, so the
+  // incoming path still has the "/api" prefix (e.g. "/api/auth/login"). Nest's
+  // routes are unprefixed (e.g. "/auth/login") — same as local dev — so strip it
+  // here rather than teaching every route about a prefix it only has in prod.
+  if (req.url) {
+    req.url = req.url.replace(/^\/api(?=\/|$)/, "") || "/";
+  }
   server(req, res);
 }
