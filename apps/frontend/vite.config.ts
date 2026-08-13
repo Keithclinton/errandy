@@ -24,8 +24,29 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache the app shell only — listings/bids/chat must always hit the network fresh.
-        globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+        // Precache static assets only — HTML is handled by the runtimeCaching rule below,
+        // not precached, so a deploy is never masked by a stale cached page shell.
+        globPatterns: ["**/*.{js,css,svg,png,ico}"],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        // vite-plugin-pwa injects its own precache-first NavigationRoute (index.html) by
+        // default, registered *before* the runtimeCaching rule below — so it would win
+        // for every navigation regardless of the NetworkFirst rule. Deny it everything so
+        // it's present but never matches, leaving NetworkFirst as the only real handler.
+        navigateFallbackDenylist: [/.*/],
+        runtimeCaching: [
+          {
+            // Page navigations always try the network first (so you get the deploy you
+            // just shipped), falling back to the last cached page only if that's slow/offline.
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "pages",
+              networkTimeoutSeconds: 3,
+            },
+          },
+        ],
       },
     }),
   ],
