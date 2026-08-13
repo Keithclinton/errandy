@@ -4,6 +4,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { ListingStatus, Prisma, ReportStatus, UserStatus } from "@prisma/client";
 import { QueryUsersDto } from "./dto/query-users.dto";
 import { ResolveReportDto } from "./dto/resolve-report.dto";
+import { SetKycStatusDto } from "./dto/set-kyc-status.dto";
 import { EVENTS, ReportResolvedEvent } from "../common/events/domain-events";
 
 @Injectable()
@@ -66,6 +67,30 @@ export class AdminService {
   async reinstateUser(userId: string) {
     const user = await this.prisma.user.update({ where: { id: userId }, data: { status: UserStatus.active } });
     const { passwordHash, refreshTokenHash, passwordResetTokenHash, ...safe } = user;
+    return safe;
+  }
+
+  /**
+   * Manual override for a user's KYC status, bypassing Smile ID entirely — for use
+   * while the real verification provider isn't configured yet (or for one-off support
+   * cases later). Still leaves an audit trail via a KycVerification row so it shows up
+   * the same way a real verification would in the user's history.
+   */
+  async setUserKycStatus(userId: string, adminId: string, dto: SetKycStatusDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException("User not found");
+
+    await this.prisma.kycVerification.create({
+      data: {
+        userId,
+        status: dto.status,
+        consentAt: new Date(),
+        reviewedAt: new Date(),
+        result: { manualOverride: true, reviewedBy: adminId },
+      },
+    });
+    const updated = await this.prisma.user.update({ where: { id: userId }, data: { kycStatus: dto.status } });
+    const { passwordHash, refreshTokenHash, passwordResetTokenHash, ...safe } = updated;
     return safe;
   }
 

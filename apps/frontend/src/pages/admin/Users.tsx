@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useAdminUsers, useSuspendUser, useReinstateUser } from "@/hooks/use-admin";
+import { useAdminUsers, useSuspendUser, useReinstateUser, useSetUserKycStatus } from "@/hooks/use-admin";
 import { ApiError } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ export default function AdminUsers() {
   const { data, isLoading } = useAdminUsers(search);
   const suspend = useSuspendUser();
   const reinstate = useReinstateUser();
+  const setKycStatus = useSetUserKycStatus();
 
   const handleToggle = async (userId: string, status: string) => {
     try {
@@ -24,6 +25,15 @@ export default function AdminUsers() {
         await suspend.mutateAsync(userId);
         toast.success("User suspended");
       }
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Action failed.");
+    }
+  };
+
+  const handleVerify = async (userId: string) => {
+    try {
+      await setKycStatus.mutateAsync({ userId, status: "verified" });
+      toast.success("User verified");
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Action failed.");
     }
@@ -66,9 +76,16 @@ export default function AdminUsers() {
                   </TableCell>
                   <TableCell>{user.ratingCount > 0 ? `★ ${user.ratingAvg.toFixed(1)}` : "—"}</TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline" onClick={() => handleToggle(user.id, user.status)}>
-                      {user.status === "suspended" ? "Reinstate" : "Suspend"}
-                    </Button>
+                    <div className="flex gap-2">
+                      {user.kycStatus !== "verified" && (
+                        <Button size="sm" onClick={() => handleVerify(user.id)}>
+                          Verify
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" onClick={() => handleToggle(user.id, user.status)}>
+                        {user.status === "suspended" ? "Reinstate" : "Suspend"}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

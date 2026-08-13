@@ -5,6 +5,7 @@ import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorat
 import { AdminService } from "./admin.service";
 import { QueryUsersDto } from "./dto/query-users.dto";
 import { ResolveReportDto } from "./dto/resolve-report.dto";
+import { SetKycStatusDto } from "./dto/set-kyc-status.dto";
 import { ReportStatus } from "@prisma/client";
 
 @ApiTags("admin")
@@ -32,6 +33,11 @@ export class AdminController {
   @Patch("users/:id/reinstate")
   reinstateUser(@Param("id") id: string) {
     return this.adminService.reinstateUser(id);
+  }
+
+  @Patch("users/:id/kyc")
+  setUserKycStatus(@CurrentUser() admin: AuthUser, @Param("id") id: string, @Body() dto: SetKycStatusDto) {
+    return this.adminService.setUserKycStatus(id, admin.id, dto);
   }
 
   @Get("reports")

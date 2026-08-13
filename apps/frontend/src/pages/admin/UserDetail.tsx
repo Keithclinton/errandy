@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useAdminUserDetail, useSuspendUser, useReinstateUser } from "@/hooks/use-admin";
+import { useAdminUserDetail, useSuspendUser, useReinstateUser, useSetUserKycStatus } from "@/hooks/use-admin";
+import type { KycStatus } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ export default function AdminUserDetail() {
   const { data: user, isLoading } = useAdminUserDetail(id);
   const suspend = useSuspendUser();
   const reinstate = useReinstateUser();
+  const setKycStatus = useSetUserKycStatus();
 
   if (isLoading || !user) return <Skeleton className="h-64" />;
 
@@ -30,6 +32,15 @@ export default function AdminUserDetail() {
     }
   };
 
+  const handleSetKyc = async (status: KycStatus) => {
+    try {
+      await setKycStatus.mutateAsync({ userId: user.id, status });
+      toast.success(`KYC status set to ${status}`);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Action failed.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -42,9 +53,20 @@ export default function AdminUserDetail() {
             {user.isAdmin && <Badge>admin</Badge>}
           </div>
         </div>
-        <Button variant="outline" onClick={handleToggle}>
-          {user.status === "suspended" ? "Reinstate" : "Suspend"}
-        </Button>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex gap-2">
+            {(["verified", "rejected", "none"] as const)
+              .filter((status) => status !== user.kycStatus)
+              .map((status) => (
+                <Button key={status} size="sm" variant="outline" onClick={() => handleSetKyc(status)}>
+                  Set KYC: {status}
+                </Button>
+              ))}
+          </div>
+          <Button variant="outline" onClick={handleToggle}>
+            {user.status === "suspended" ? "Reinstate" : "Suspend"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

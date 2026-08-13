@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import type { Bid, KycVerification, Listing, Paginated, Report, ReportStatus, User } from "@/types/api";
+import type { Bid, KycStatus, KycVerification, Listing, Paginated, Report, ReportStatus, User } from "@/types/api";
 
 export function useAdminUsers(search: string) {
   return useQuery({
@@ -34,6 +34,22 @@ function useAdminUserAction(action: "suspend" | "reinstate") {
 
 export const useSuspendUser = () => useAdminUserAction("suspend");
 export const useReinstateUser = () => useAdminUserAction("reinstate");
+
+/**
+ * Manually sets a user's KYC status, bypassing Smile ID — for use while the real
+ * verification provider isn't configured, or for one-off support overrides later.
+ */
+export function useSetUserKycStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, status }: { userId: string; status: KycStatus }) =>
+      apiFetch(`/admin/users/${userId}/kyc`, { method: "PATCH", body: { status } }),
+    onSuccess: (_data, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "users", "detail", userId] });
+    },
+  });
+}
 
 export function useAdminReports(status?: ReportStatus) {
   return useQuery({
