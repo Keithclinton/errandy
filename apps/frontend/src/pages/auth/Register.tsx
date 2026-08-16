@@ -16,7 +16,6 @@ import { PasswordField } from "@/components/auth/PasswordField";
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Enter a valid email"),
-  phone: z.string().optional(),
   password: z.string().min(8, "At least 8 characters"),
   acceptedTerms: z
     .boolean()
@@ -68,10 +67,6 @@ export default function Register() {
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" autoComplete="email" {...register("email")} />
           {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone (optional)</Label>
-          <Input id="phone" type="tel" autoComplete="tel" {...register("phone")} />
         </div>
         <PasswordField
           id="password"

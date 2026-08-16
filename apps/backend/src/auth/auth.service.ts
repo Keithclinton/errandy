@@ -87,7 +87,6 @@ export class AuthService {
         email: dto.email,
         passwordHash,
         name: dto.name,
-        phone: dto.phone,
         acceptedTermsAt: new Date(),
         termsVersion: dto.termsVersion,
       },
