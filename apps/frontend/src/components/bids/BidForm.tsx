@@ -27,10 +27,10 @@ export function BidForm({ listingId }: { listingId: string }) {
   const onSubmit = async (values: FormValues) => {
     try {
       await placeBid.mutateAsync(values);
-      toast.success("Bid placed!");
+      toast.success("Offer sent!");
       reset();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Couldn't place your bid.");
+      toast.error(err instanceof ApiError ? err.message : "Couldn't send your offer.");
     }
   };
 
@@ -46,7 +46,7 @@ export function BidForm({ listingId }: { listingId: string }) {
         <Textarea id="message" placeholder="A quick note about how you'll help…" {...register("message")} />
       </div>
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Placing bid…" : "Place bid"}
+        {isSubmitting ? "Sending offer…" : "Make offer"}
       </Button>
     </form>
   );

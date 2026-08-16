@@ -38,7 +38,7 @@ export function RatingPrompt({ listingId }: { listingId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Rate your errand partner</Button>
+        <Button>Rate your task partner</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -12,8 +12,8 @@ export default function Feed() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Browse errands</h1>
-        <p className="text-sm text-muted-foreground">Find something to help with, or post your own.</p>
+        <h1 className="text-2xl font-semibold">Browse tasks</h1>
+        <p className="text-sm text-muted-foreground">Find work nearby, or post your own task.</p>
       </div>
 
       <ListingFilters value={filters} onChange={setFilters} />
@@ -26,10 +26,10 @@ export default function Feed() {
         </div>
       )}
 
-      {isError && <p className="text-sm text-destructive">Couldn't load listings. Try again shortly.</p>}
+      {isError && <p className="text-sm text-destructive">Couldn't load tasks. Try again shortly.</p>}
 
       {data && data.items.length === 0 && (
-        <p className="py-12 text-center text-sm text-muted-foreground">No errands match your filters yet.</p>
+        <p className="py-12 text-center text-sm text-muted-foreground">No tasks match your filters yet.</p>
       )}
 
       {data && data.items.length > 0 && (

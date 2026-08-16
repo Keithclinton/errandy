@@ -43,9 +43,9 @@ export default function Profile() {
       </div>
 
       <div>
-        <h2 className="mb-3 text-lg font-medium">Open listings</h2>
+        <h2 className="mb-3 text-lg font-medium">Open tasks</h2>
         {profile.listings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No open listings right now.</p>
+          <p className="text-sm text-muted-foreground">No open tasks right now.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {profile.listings.map((listing) => (

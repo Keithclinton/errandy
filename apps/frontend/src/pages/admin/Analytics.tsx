@@ -56,16 +56,16 @@ export default function AdminAnalytics() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Listing → bid → chat funnel</CardTitle>
+          <CardTitle className="text-base">Task → offer → chat funnel</CardTitle>
         </CardHeader>
         <CardContent>
           {funnel.isLoading || !funnel.data ? (
             <Skeleton className="h-16" />
           ) : (
             <div className="flex flex-wrap items-center gap-3">
-              <StatTile label="Listings created" value={String(funnel.data.listingsCreated)} />
+              <StatTile label="Tasks created" value={String(funnel.data.listingsCreated)} />
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              <StatTile label="With a bid" value={String(funnel.data.listingsWithBids)} />
+              <StatTile label="With an offer" value={String(funnel.data.listingsWithBids)} />
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
               <StatTile label="With a chat" value={String(funnel.data.listingsWithChat)} />
             </div>
@@ -76,13 +76,13 @@ export default function AdminAnalytics() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Bids per month</CardTitle>
+            <CardTitle className="text-base">Offers per month</CardTitle>
           </CardHeader>
           <CardContent>
             {bidsPerMonth.isLoading || !bidsPerMonth.data ? (
               <Skeleton className="h-64" />
             ) : bidsPerMonth.data.length === 0 ? (
-              <p className="py-16 text-center text-sm text-muted-foreground">No bids yet.</p>
+              <p className="py-16 text-center text-sm text-muted-foreground">No offers yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={bidsPerMonth.data}>
@@ -99,7 +99,7 @@ export default function AdminAnalytics() {
                     labelFormatter={(v) => new Date(v).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
                     contentStyle={{ borderRadius: 8, borderColor: "hsl(214 32% 91%)", fontSize: 12 }}
                   />
-                  <Line type="monotone" dataKey="count" name="Bids" stroke={CHART_BLUE} strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="count" name="Offers" stroke={CHART_BLUE} strokeWidth={2} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -114,7 +114,7 @@ export default function AdminAnalytics() {
             {topCategories.isLoading || !topCategories.data ? (
               <Skeleton className="h-64" />
             ) : topCategories.data.length === 0 ? (
-              <p className="py-16 text-center text-sm text-muted-foreground">No listings yet.</p>
+              <p className="py-16 text-center text-sm text-muted-foreground">No tasks yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={topCategories.data}>
@@ -122,7 +122,7 @@ export default function AdminAnalytics() {
                   <XAxis dataKey="category" tick={{ fontSize: 12, fill: "hsl(215 16% 47%)" }} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "hsl(215 16% 47%)" }} axisLine={false} tickLine={false} width={30} />
                   <Tooltip contentStyle={{ borderRadius: 8, borderColor: "hsl(214 32% 91%)", fontSize: 12 }} />
-                  <Bar dataKey="count" name="Listings" fill={CHART_BLUE} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" name="Tasks" fill={CHART_BLUE} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}

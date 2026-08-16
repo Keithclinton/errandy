@@ -29,14 +29,16 @@ export function BidList({
   const withdraw = useWithdrawBid();
 
   if (bids.length === 0) {
-    return <p className="text-sm text-muted-foreground">No bids yet.</p>;
+    return <p className="text-sm text-muted-foreground">No offers yet.</p>;
   }
 
   const handle = async (action: "accept" | "decline" | "withdraw", bidId: string) => {
     try {
       const mutation = action === "accept" ? accept : action === "decline" ? decline : withdraw;
       await mutation.mutateAsync(bidId);
-      toast.success(action === "accept" ? "Bid accepted" : action === "decline" ? "Bid declined" : "Bid withdrawn");
+      toast.success(
+        action === "accept" ? "Offer accepted" : action === "decline" ? "Offer declined" : "Offer withdrawn",
+      );
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Something went wrong.");
     }

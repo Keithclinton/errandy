@@ -6,7 +6,6 @@ import {
   Star,
   ShieldCheck,
   Flag,
-  Wallet,
   MapPin,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
@@ -16,23 +15,23 @@ import { Card, CardContent } from "@/components/ui/card";
 const steps = [
   {
     icon: ClipboardList,
-    title: "Post an errand",
-    body: "Describe what you need done, whether it's picking up groceries, moving a couch, or waiting in line.",
+    title: "Post a task",
+    body: "Describe what you need done — from quick everyday errands to skilled, real-world work.",
   },
   {
     icon: Handshake,
-    title: "Get bids",
-    body: "People nearby bid with a price and a quick note on how they'll help.",
+    title: "Get offers",
+    body: "People nearby send offers with a price and a quick note on how they'll help.",
   },
   {
     icon: MessageCircle,
     title: "Chat & agree",
-    body: "Message the bidder directly, agree on the details, and share contact info when you're ready.",
+    body: "Message the provider directly, agree on the details, and share contact info when you're ready.",
   },
   {
     icon: Star,
     title: "Complete & rate",
-    body: "Mark the errand done, then both of you rate each other. Ratings stay hidden until both are in.",
+    body: "Mark the task done, then both of you rate each other. Ratings stay hidden until both are in.",
   },
 ];
 
@@ -40,22 +39,17 @@ const features = [
   {
     icon: ShieldCheck,
     title: "Verified users",
-    body: "A one-time government ID + selfie check before anyone can post or bid, so you know who you're dealing with.",
+    body: "A one-time government ID + selfie check before anyone can post a task or make an offer, so you know who you're dealing with.",
   },
   {
     icon: MapPin,
     title: "Built for local",
-    body: "Filter by category and location to find errands or bidders near you.",
-  },
-  {
-    icon: Wallet,
-    title: "Free to use",
-    body: "No fees, no cut, no ads. Payment for the errand itself happens directly between you and the other person.",
+    body: "Filter by category and location to find tasks nearby.",
   },
   {
     icon: Flag,
     title: "Report anytime",
-    body: "Every listing, profile, and message has a report button, reviewed by our moderation team.",
+    body: "Every task, profile, and message has a report button, reviewed by our moderation team.",
   },
 ];
 
@@ -71,18 +65,18 @@ export default function Landing() {
       <section className="-mx-4 -mt-6 bg-secondary px-4 pb-16 pt-16 sm:-mx-6 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Post errands. Bid on them. <span className="text-primary">Get things done.</span>
+            Need something done? <span className="text-primary">Post it.</span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Errandspot is a marketplace where people help each other with everyday tasks. Post what you
-            need done, bid on errands nearby, chat to agree on terms, and get it done.
+            From everyday errands to skilled work, post what you need done and get offers from
+            verified providers.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg">
-              <Link to="/register">Sign up free</Link>
+              <Link to="/register">Post a task</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/browse">Browse errands</Link>
+              <Link to="/browse">Find work</Link>
             </Button>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
@@ -141,7 +135,8 @@ export default function Landing() {
       <section className="rounded-xl bg-secondary px-6 py-12 text-center">
         <h2 className="text-2xl font-semibold">Ready to get something done?</h2>
         <p className="mt-2 text-muted-foreground">
-          Sign up in under a minute. Verification only happens once you're ready to post or bid.
+          Sign up in under a minute. Verification only happens once you're ready to post a task or
+          make an offer.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Button asChild size="lg">

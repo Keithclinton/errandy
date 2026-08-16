@@ -9,14 +9,14 @@ export default function Privacy() {
 
       <h2 className="text-lg font-medium">1. What we collect</h2>
       <p className="text-sm">
-        Account details (name, email, phone), listing and bid content, chat messages, and — during
+        Account details (name, email, phone), task and offer content, chat messages, and — during
         one-time identity verification — a government ID and selfie, processed by our verification
         partner. Errandspot does not store your raw ID images itself.
       </p>
 
       <h2 className="text-lg font-medium">2. How we use it</h2>
       <p className="text-sm">
-        To operate the marketplace: matching listings and bids, enabling chat, computing ratings,
+        To operate the marketplace: matching tasks and offers, enabling chat, computing ratings,
         reviewing reports, and sending notifications about your account activity.
       </p>
 

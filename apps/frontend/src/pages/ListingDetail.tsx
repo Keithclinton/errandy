@@ -89,14 +89,14 @@ export default function ListingDetail() {
 
         {isOwner ? (
           <div>
-            <h2 className="mb-3 text-lg font-medium">Bids ({listing.bids?.length ?? 0})</h2>
+            <h2 className="mb-3 text-lg font-medium">Offers ({listing.bids?.length ?? 0})</h2>
             <BidList bids={listing.bids ?? []} isOwner currentUserId={user?.id} />
           </div>
         ) : (
           <div>
-            <h2 className="mb-3 text-lg font-medium">Place a bid</h2>
+            <h2 className="mb-3 text-lg font-medium">Make an offer</h2>
             {listing.status !== "open" ? (
-              <p className="text-sm text-muted-foreground">This listing is no longer accepting bids.</p>
+              <p className="text-sm text-muted-foreground">This task is no longer accepting offers.</p>
             ) : (
               <VerifiedGate>
                 <BidForm listingId={listing.id} />
@@ -143,13 +143,13 @@ export default function ListingDetail() {
 
             {isAcceptedBidder && !isOwner && (
               <Button className="w-full" variant="outline" onClick={() => handleMessage()}>
-                <MessageCircle className="mr-2 h-4 w-4" /> Message owner
+                <MessageCircle className="mr-2 h-4 w-4" /> Message poster
               </Button>
             )}
 
             {isOwner && acceptedBid && (
               <Button className="w-full" variant="outline" onClick={() => handleMessage(acceptedBid.bidderId)}>
-                <MessageCircle className="mr-2 h-4 w-4" /> Message bidder
+                <MessageCircle className="mr-2 h-4 w-4" /> Message provider
               </Button>
             )}
 

@@ -72,7 +72,7 @@ export default function AdminUserDetail() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Listings ({user.listings.length})</CardTitle>
+            <CardTitle className="text-base">Tasks ({user.listings.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {user.listings.length === 0 && <p className="text-sm text-muted-foreground">None</p>}
@@ -86,7 +86,7 @@ export default function AdminUserDetail() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Bids ({user.bids.length})</CardTitle>
+            <CardTitle className="text-base">Offers ({user.bids.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {user.bids.length === 0 && <p className="text-sm text-muted-foreground">None</p>}

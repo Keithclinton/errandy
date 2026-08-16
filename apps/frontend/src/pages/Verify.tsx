@@ -43,7 +43,7 @@ export default function Verify() {
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <CheckCircle2 className="h-10 w-10 text-primary" />
               <p className="font-medium">You're verified</p>
-              <p className="text-sm text-muted-foreground">You can post errands and place bids.</p>
+              <p className="text-sm text-muted-foreground">You can post tasks and make offers.</p>
               <Button asChild className="mt-2">
                 <Link to="/browse">Back to home</Link>
               </Button>

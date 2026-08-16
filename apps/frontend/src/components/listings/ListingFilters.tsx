@@ -14,7 +14,7 @@ export function ListingFilters({
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search errands…"
+          placeholder="Search tasks…"
           className="pl-9"
           value={value.search ?? ""}
           onChange={(e) => onChange({ ...value, search: e.target.value, page: 1 })}

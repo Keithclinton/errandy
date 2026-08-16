@@ -48,7 +48,7 @@ export default function Register() {
   return (
     <AuthLayout
       title="Create your account"
-      description="One account to post errands, bid, and chat."
+      description="One account to post tasks, make offers, and chat."
       footer={
         <>
           Already have an account?{" "}

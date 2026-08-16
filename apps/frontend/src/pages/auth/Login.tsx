@@ -43,7 +43,7 @@ export default function Login() {
   return (
     <AuthLayout
       title="Welcome back"
-      description="Log in to post, bid, and chat on Errandspot."
+      description="Log in to post tasks, make offers, and chat on Errandspot."
       footer={
         <>
           No account?{" "}

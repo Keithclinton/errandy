@@ -35,18 +35,18 @@ export default function CreateListing() {
   const onSubmit = async (values: FormValues) => {
     try {
       const listing = await createListing.mutateAsync({ ...values, imageUrls });
-      toast.success("Listing posted!");
+      toast.success("Task posted!");
       navigate(`/listings/${listing.id}`);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Couldn't post your listing.");
+      toast.error(err instanceof ApiError ? err.message : "Couldn't post your task.");
     }
   };
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Post an errand</h1>
-        <p className="text-sm text-muted-foreground">Describe what you need done — bidders will come to you.</p>
+        <h1 className="text-2xl font-semibold">Post a task</h1>
+        <p className="text-sm text-muted-foreground">Describe what you need done — offers will come to you.</p>
       </div>
 
       <VerifiedGate>
@@ -82,7 +82,7 @@ export default function CreateListing() {
             <ImageUploader value={imageUrls} onChange={setImageUrls} />
           </div>
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Posting…" : "Post errand"}
+            {isSubmitting ? "Posting…" : "Post task"}
           </Button>
         </form>
       </VerifiedGate>

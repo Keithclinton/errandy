@@ -17,6 +17,14 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ReportReason, ReportTargetType } from "@/types/api";
 
+// Display-only labels — the API's targetType values (e.g. "listing") stay as they
+// are on the wire; this just controls what the dialog title says.
+const TARGET_LABELS: Record<ReportTargetType, string> = {
+  user: "user",
+  listing: "task",
+  message: "message",
+};
+
 const REASONS: { value: ReportReason; label: string }[] = [
   { value: "spam", label: "Spam" },
   { value: "scam", label: "Scam" },
@@ -65,7 +73,7 @@ export function ReportDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Report {targetType}</DialogTitle>
+          <DialogTitle>Report {TARGET_LABELS[targetType]}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
