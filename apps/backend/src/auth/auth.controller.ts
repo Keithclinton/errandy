@@ -76,7 +76,9 @@ export class AuthController {
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     const authUser = req.user as AuthUser;
     const tokens = await this.authService.issueTokensForGoogleUser(authUser);
-    const frontendUrl = this.config.get<string>("CORS_ORIGIN") ?? "http://localhost:5173";
+    const configuredOrigin = this.config.get<string>("CORS_ORIGIN")?.split(",")[0]?.trim();
+    const forwardedProto = (req.headers["x-forwarded-proto"] as string | undefined)?.split(",")[0];
+    const frontendUrl = configuredOrigin || `${forwardedProto ?? req.protocol}://${req.get("host")}`;
     const redirectUrl = new URL("/auth/callback", frontendUrl);
     redirectUrl.searchParams.set("accessToken", tokens.accessToken);
     redirectUrl.searchParams.set("refreshToken", tokens.refreshToken);
