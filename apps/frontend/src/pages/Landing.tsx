@@ -16,7 +16,7 @@ const steps = [
   {
     icon: ClipboardList,
     title: "Post a task",
-    body: "Describe what you need done — from quick everyday errands to skilled, real-world work.",
+    body: "Describe what you need done, from quick everyday errands to skilled work.",
   },
   {
     icon: Handshake,
