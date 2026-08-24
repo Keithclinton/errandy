@@ -14,6 +14,9 @@ import Profile from "@/pages/Profile";
 import Notifications from "@/pages/Notifications";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import Safety from "@/pages/Safety";
+import About from "@/pages/About";
+import HelpCenter from "@/pages/HelpCenter";
 import NotFound from "@/pages/NotFound";
 
 import Login from "@/pages/auth/Login";
@@ -46,6 +49,9 @@ export default function App() {
         <Route path="/auth/callback" element={<GoogleCallback />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/safety" element={<Safety />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/help" element={<HelpCenter />} />
 
         {/* Protected */}
         <Route element={<ProtectedRoute />}>

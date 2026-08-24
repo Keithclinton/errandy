@@ -46,6 +46,16 @@ export function AppShell() {
             <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
               <Link to="/browse">Browse</Link>
             </Button>
+            {!user && (
+              <>
+                <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                  <Link to="/#how-it-works">How it works</Link>
+                </Button>
+                <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                  <Link to="/safety">Safety</Link>
+                </Button>
+              </>
+            )}
             {user ? (
               <>
                 <NotificationBell />
