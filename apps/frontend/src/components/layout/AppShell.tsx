@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, PlusCircle, ListChecks, MessageCircle, LogOut, ShieldCheck, LayoutDashboard } from "lucide-react";
+import { Home, PlusCircle, ListChecks, MessageCircle, LogOut, ShieldCheck, LayoutDashboard, Menu } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { cn } from "@/lib/utils";
 
@@ -21,9 +23,16 @@ const mobileNavItems = [
   { to: "/chat", label: "Chat", icon: MessageCircle },
 ];
 
+const guestMenuLinks = [
+  { to: "/browse", label: "Browse" },
+  { to: "/#how-it-works", label: "How it works" },
+  { to: "/safety", label: "Safety" },
+];
+
 export function AppShell() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const initials = user?.name
     ?.split(" ")
@@ -54,6 +63,32 @@ export function AppShell() {
                 <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
                   <Link to="/safety">Safety</Link>
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="sm:hidden"
+                  onClick={() => setMenuOpen(true)}
+                  aria-label="Open menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+                  <SheetContent side="left" className="w-64">
+                    <SheetTitle>Menu</SheetTitle>
+                    <nav className="mt-6 flex flex-col gap-1">
+                      {guestMenuLinks.map((link) => (
+                        <Link
+                          key={link.to}
+                          to={link.to}
+                          onClick={() => setMenuOpen(false)}
+                          className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </nav>
+                  </SheetContent>
+                </Sheet>
               </>
             )}
             {user ? (
