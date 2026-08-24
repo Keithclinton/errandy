@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useCreateListing } from "@/hooks/use-listings";
 import { ApiError } from "@/lib/api-client";
+import { TASK_CATEGORIES } from "@/lib/categories";
 import { VerifiedGate } from "@/components/layout/VerifiedGate";
 import { ImageUploader } from "@/components/listings/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const schema = z.object({
   title: z.string().min(3, "At least 3 characters"),
@@ -28,6 +30,7 @@ export default function CreateListing() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
@@ -46,7 +49,7 @@ export default function CreateListing() {
     <div className="mx-auto max-w-xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Post a task</h1>
-        <p className="text-sm text-muted-foreground">Describe what you need done — offers will come to you.</p>
+        <p className="text-sm text-muted-foreground">Describe what you need done, and offers will come to you.</p>
       </div>
 
       <VerifiedGate>
@@ -64,7 +67,24 @@ export default function CreateListing() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Input id="category" placeholder="Errands, Moving, Delivery…" {...register("category")} />
+              <Controller
+                name="category"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TASK_CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
             </div>
             <div className="space-y-2">

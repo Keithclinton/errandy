@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsEnum, IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 import { ListingStatus } from "@prisma/client";
 
 export class QueryListingsDto {
@@ -23,6 +23,11 @@ export class QueryListingsDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiProperty({ required: false, enum: ["newest", "oldest", "budget_high", "budget_low"] })
+  @IsOptional()
+  @IsIn(["newest", "oldest", "budget_high", "budget_low"])
+  sort?: "newest" | "oldest" | "budget_high" | "budget_low";
 
   @ApiProperty({ required: false, description: "Filter to a specific owner's listings (e.g. \"my listings\")" })
   @IsOptional()

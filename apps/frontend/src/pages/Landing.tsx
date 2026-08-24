@@ -108,7 +108,7 @@ export default function Landing() {
           <img
             src={heroIllustration}
             alt="Person browsing tasks on their phone, surrounded by example task offers"
-            className="mx-auto w-full max-w-2xl"
+            className="-mx-6 w-[calc(100%+3rem)] max-w-none sm:mx-auto sm:w-full sm:max-w-2xl"
           />
         </div>
       </section>

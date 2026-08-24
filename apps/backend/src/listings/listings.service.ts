@@ -47,7 +47,7 @@ export class ListingsService {
       status: query.status ?? (query.ownerId ? undefined : ListingStatus.open),
       ...(query.ownerId && { ownerId: query.ownerId }),
       ...(query.category && { category: query.category }),
-      ...(query.location && { location: query.location }),
+      ...(query.location && { location: { contains: query.location, mode: "insensitive" } }),
       ...(query.search && {
         OR: [
           { title: { contains: query.search, mode: "insensitive" } },
@@ -55,13 +55,34 @@ export class ListingsService {
         ],
       }),
     };
+    const orderBy: Prisma.ListingOrderByWithRelationInput =
+      query.sort === "oldest"
+        ? { createdAt: "asc" }
+        : query.sort === "budget_high"
+          ? { budget: "desc" }
+          : query.sort === "budget_low"
+            ? { budget: "asc" }
+            : { createdAt: "desc" };
     const [items, total] = await Promise.all([
       this.prisma.listing.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
-        include: { owner: { select: { id: true, name: true, avatarUrl: true, ratingAvg: true, ratingCount: true } } },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+              ratingAvg: true,
+              ratingCount: true,
+              kycStatus: true,
+              _count: { select: { listings: true } },
+            },
+          },
+          _count: { select: { bids: true } },
+        },
       }),
       this.prisma.listing.count({ where }),
     ]);
@@ -72,7 +93,17 @@ export class ListingsService {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: {
-        owner: { select: { id: true, name: true, avatarUrl: true, ratingAvg: true, ratingCount: true } },
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            ratingAvg: true,
+            ratingCount: true,
+            kycStatus: true,
+            _count: { select: { listings: true } },
+          },
+        },
         bids: true,
       },
     });

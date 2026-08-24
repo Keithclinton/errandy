@@ -52,6 +52,8 @@ export interface ListingOwner {
   avatarUrl?: string | null;
   ratingAvg: number;
   ratingCount: number;
+  kycStatus?: KycStatus;
+  _count?: { listings: number };
 }
 
 export interface Listing {
@@ -69,6 +71,7 @@ export interface Listing {
   completedAt?: string | null;
   createdAt: string;
   bids?: Bid[];
+  _count?: { bids: number };
 }
 
 export interface Bid {

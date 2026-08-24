@@ -8,6 +8,7 @@ export interface ListingFilters {
   status?: string;
   search?: string;
   ownerId?: string;
+  sort?: "newest" | "oldest" | "budget_high" | "budget_low";
   page?: number;
   limit?: number;
   [key: string]: string | number | boolean | undefined;

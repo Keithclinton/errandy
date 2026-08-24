@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { ArrayMaxSize, IsArray, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
+import { ArrayMaxSize, IsArray, IsIn, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
+import { TASK_CATEGORIES } from "../categories";
 
 export class CreateListingDto {
   @ApiProperty()
@@ -12,8 +13,8 @@ export class CreateListingDto {
   @MinLength(10)
   description: string;
 
-  @ApiProperty()
-  @IsString()
+  @ApiProperty({ enum: TASK_CATEGORIES })
+  @IsIn(TASK_CATEGORIES)
   category: string;
 
   @ApiProperty()
