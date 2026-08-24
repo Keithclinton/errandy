@@ -12,26 +12,12 @@ import {
   Wallet,
   LayoutGrid,
   ChevronRight,
-  Wrench,
-  ShoppingBasket,
-  Tv,
-  Sofa,
-  Camera,
-  Store,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-
-const taskExamples = [
-  { icon: Wrench, title: "Fix leaking kitchen sink", price: "KES 2,500" },
-  { icon: ShoppingBasket, title: "Do my grocery shopping", price: "KES 700" },
-  { icon: Tv, title: "Mount my TV on the wall", price: "KES 1,500" },
-  { icon: Sofa, title: "Help move a couch upstairs", price: "KES 1,000" },
-  { icon: Camera, title: "Take photos of an apartment", price: "KES 1,500" },
-  { icon: Store, title: "Take photos of a storefront", price: "KES 800" },
-];
+import heroIllustration from "@/assets/hero-illustration.jpg";
 
 const valueProps = [
   { icon: Clock, title: "Save Time", body: "Let someone else handle it." },
@@ -94,7 +80,7 @@ export default function Landing() {
   return (
     <div className="space-y-20 pb-12">
       {/* Hero */}
-      <section className="-mx-4 -mt-6 bg-secondary px-4 pb-16 pt-16 sm:-mx-6 sm:px-6">
+      <section className="rounded-xl bg-secondary px-6 py-16">
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
           <div className="text-center lg:text-left">
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -135,23 +121,11 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-4">
-            {taskExamples.map((task, i) => (
-              <div
-                key={task.title}
-                className={cn(
-                  "rounded-xl border bg-card p-3 shadow-md",
-                  i % 2 === 1 && "lg:mt-8",
-                )}
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-primary">
-                  <task.icon className="h-4 w-4" />
-                </div>
-                <p className="mt-2 text-sm font-medium leading-snug">{task.title}</p>
-                <p className="mt-1 text-xs font-semibold text-primary">{task.price}</p>
-              </div>
-            ))}
-          </div>
+          <img
+            src={heroIllustration}
+            alt="Person browsing tasks on their phone, surrounded by example task offers"
+            className="mx-auto w-full max-w-lg"
+          />
         </div>
       </section>
 
@@ -226,7 +200,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="-mx-4 -mb-12 space-y-6 bg-primary px-4 py-10 text-center text-sm text-primary-foreground/70 sm:-mx-6 sm:px-6">
+      <footer className="rounded-xl space-y-6 bg-primary px-6 py-10 text-center text-sm text-primary-foreground/70">
         <Link to="/" className="inline-flex items-center gap-2 text-base font-semibold text-primary-foreground">
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-highlight text-sm text-highlight-foreground">
             E
