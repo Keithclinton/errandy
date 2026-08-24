@@ -20,7 +20,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const CHART_BLUE = "#0284c7";
+const CHART_BLUE = "#110F6D";
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (

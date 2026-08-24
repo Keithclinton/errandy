@@ -42,6 +42,19 @@ export default function Profile() {
         {id && <ReportDialog targetType="user" targetId={id} />}
       </div>
 
+      {profile.bio && <p className="whitespace-pre-wrap text-sm leading-relaxed">{profile.bio}</p>}
+
+      {profile.portfolioUrls.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-medium">Portfolio</h2>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {profile.portfolioUrls.map((url) => (
+              <img key={url} src={url} alt="" className="aspect-square rounded-lg object-cover" />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="mb-3 text-lg font-medium">Open tasks</h2>
         {profile.listings.length === 0 ? (

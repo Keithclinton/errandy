@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { MessageCircle } from "lucide-react";
 import { useAcceptBid, useDeclineBid, useWithdrawBid } from "@/hooks/use-bids";
+import { useOpenConversation } from "@/hooks/use-chat";
 import { ApiError } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,14 +21,17 @@ export function BidList({
   bids,
   isOwner,
   currentUserId,
+  listingId,
 }: {
   bids: Bid[];
   isOwner: boolean;
   currentUserId?: string;
+  listingId?: string;
 }) {
   const accept = useAcceptBid();
   const decline = useDeclineBid();
   const withdraw = useWithdrawBid();
+  const openConversation = useOpenConversation();
 
   if (bids.length === 0) {
     return <p className="text-sm text-muted-foreground">No offers yet.</p>;
@@ -68,6 +73,20 @@ export function BidList({
               </div>
               {bid.status === "pending" && isOwner && (
                 <div className="flex shrink-0 gap-2">
+                  {(bid.listing?.id ?? listingId) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        openConversation.mutate({
+                          listingId: (bid.listing?.id ?? listingId)!,
+                          withUserId: bid.bidderId,
+                        })
+                      }
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button size="sm" onClick={() => handle("accept", bid.id)}>
                     Accept
                   </Button>

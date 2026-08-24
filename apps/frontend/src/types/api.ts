@@ -26,6 +26,8 @@ export interface User {
   name: string;
   phone?: string | null;
   avatarUrl?: string | null;
+  bio?: string | null;
+  portfolioUrls: string[];
   kycStatus: KycStatus;
   isAdmin: boolean;
   status: UserStatus;
@@ -40,6 +42,8 @@ export interface PublicProfile {
   id: string;
   name: string;
   avatarUrl?: string | null;
+  bio?: string | null;
+  portfolioUrls: string[];
   ratingAvg: number;
   ratingCount: number;
   createdAt: string;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, PlusCircle, ListChecks, MessageCircle, LogOut, ShieldCheck, LayoutDashboard, Menu } from "lucide-react";
+import { Home, PlusCircle, ListChecks, MessageCircle, LogOut, ShieldCheck, LayoutDashboard, Menu, UserCog } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -106,6 +106,11 @@ export function AppShell() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel className="truncate">{user.name}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile/edit">
+                        <UserCog className="mr-2 h-4 w-4" /> Edit profile
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/my-activity">
                         <ListChecks className="mr-2 h-4 w-4" /> My activity

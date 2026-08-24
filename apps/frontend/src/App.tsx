@@ -11,6 +11,7 @@ import CreateListing from "@/pages/CreateListing";
 import MyActivity from "@/pages/MyActivity";
 import Verify from "@/pages/Verify";
 import Profile from "@/pages/Profile";
+import EditProfile from "@/pages/EditProfile";
 import Notifications from "@/pages/Notifications";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
@@ -56,6 +57,7 @@ export default function App() {
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
           <Route path="/listings/new" element={<CreateListing />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/my-activity" element={<MyActivity />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/notifications" element={<Notifications />} />

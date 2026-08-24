@@ -22,7 +22,7 @@ export default function ConversationsList() {
 
       {data && data.length === 0 && (
         <p className="py-12 text-center text-sm text-muted-foreground">
-          No conversations yet — chat opens once an offer is accepted.
+          No conversations yet. Chat opens as soon as you make or receive an offer.
         </p>
       )}
 

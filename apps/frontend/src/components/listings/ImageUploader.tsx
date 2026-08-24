@@ -4,22 +4,32 @@ import { X, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiError } from "@/lib/api-client";
 
-const MAX_IMAGES = 8;
+const DEFAULT_MAX_IMAGES = 8;
 
-export function ImageUploader({ value, onChange }: { value: string[]; onChange: (urls: string[]) => void }) {
+export function ImageUploader({
+  value,
+  onChange,
+  uploadUrlEndpoint = "/listings/upload-url",
+  maxImages = DEFAULT_MAX_IMAGES,
+}: {
+  value: string[];
+  onChange: (urls: string[]) => void;
+  uploadUrlEndpoint?: string;
+  maxImages?: number;
+}) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const remaining = MAX_IMAGES - value.length;
+    const remaining = maxImages - value.length;
     const selected = Array.from(files).slice(0, remaining);
     setUploading(true);
     try {
       const uploaded: string[] = [];
       for (const file of selected) {
         const { clientToken, pathname } = await apiFetch<{ clientToken: string; pathname: string }>(
-          "/listings/upload-url",
+          uploadUrlEndpoint,
           { method: "POST", body: { filename: file.name, contentType: file.type } },
         );
         const blob = await put(pathname, file, { access: "public", token: clientToken, contentType: file.type });
@@ -49,7 +59,7 @@ export function ImageUploader({ value, onChange }: { value: string[]; onChange: 
             </button>
           </div>
         ))}
-        {value.length < MAX_IMAGES && (
+        {value.length < maxImages && (
           <button
             type="button"
             disabled={uploading}
