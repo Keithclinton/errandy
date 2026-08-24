@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { MapPin, MessageCircle } from "lucide-react";
+import { MapPin, MessageCircle, Pencil } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useListing, useCompleteListing } from "@/hooks/use-listings";
 import { useListingRatings } from "@/hooks/use-ratings";
@@ -66,6 +66,14 @@ export default function ListingDetail() {
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{listing.category}</Badge>
           <Badge variant="outline">{listing.status}</Badge>
+          {isOwner && listing.status === "open" && (
+            <Link
+              to={`/listings/${listing.id}/edit`}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary hover:underline"
+            >
+              <Pencil className="h-3 w-3" /> Edit
+            </Link>
+          )}
         </div>
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl font-semibold">{listing.title}</h1>

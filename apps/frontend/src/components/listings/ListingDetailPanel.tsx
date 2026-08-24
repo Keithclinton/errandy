@@ -87,7 +87,11 @@ export function ListingDetailPanel({ listingId }: { listingId: string }) {
                     <Star className="h-3 w-3 fill-highlight text-highlight" /> {listing.owner.ratingAvg.toFixed(1)}
                   </span>
                 )}
-                {listing.owner._count && <span>{listing.owner._count.listings} tasks posted</span>}
+                {listing.owner._count && (
+                  <span>
+                    {listing.owner._count.listings} {listing.owner._count.listings === 1 ? "task" : "tasks"} posted
+                  </span>
+                )}
               </p>
             </div>
           </Link>

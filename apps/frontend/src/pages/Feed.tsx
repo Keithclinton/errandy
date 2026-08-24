@@ -40,18 +40,15 @@ export default function Feed() {
       {user && <BrowseSidebar />}
 
       <div className="min-w-0 flex-1 space-y-6">
-        <div className="flex items-center justify-between gap-3 lg:hidden">
-          <span className="flex items-center gap-1 text-sm font-medium">
-            <MapPin className="h-4 w-4 text-primary" /> Nairobi, Kenya
-          </span>
-          {user && (
+        {user && (
+          <div className="flex justify-end lg:hidden">
             <Button asChild size="sm" variant="highlight">
               <Link to="/listings/new">
                 <Plus className="mr-1 h-4 w-4" /> Post a Task
               </Link>
             </Button>
-          )}
-        </div>
+          </div>
+        )}
 
         <div>
           <h1 className="text-2xl font-semibold">Browse Tasks</h1>
@@ -121,8 +118,8 @@ export default function Feed() {
 
         {data && data.items.length > 0 && (
           <>
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
-              <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+              <div className="min-w-0 space-y-3">
                 {data.items.map((listing) => (
                   <ListingListItem
                     key={listing.id}

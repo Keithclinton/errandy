@@ -48,6 +48,18 @@ export function useCreateListing() {
   });
 }
 
+export function useUpdateListing(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Partial<CreateListingInput>) =>
+      apiFetch<Listing>(`/listings/${id}`, { method: "PATCH", body: input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["listings", id] });
+      queryClient.invalidateQueries({ queryKey: ["listings"] });
+    },
+  });
+}
+
 export function useCompleteListing() {
   const queryClient = useQueryClient();
   return useMutation({

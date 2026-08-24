@@ -8,6 +8,7 @@ import Landing from "@/pages/Landing";
 import Feed from "@/pages/Feed";
 import ListingDetail from "@/pages/ListingDetail";
 import CreateListing from "@/pages/CreateListing";
+import EditListing from "@/pages/EditListing";
 import MyActivity from "@/pages/MyActivity";
 import Verify from "@/pages/Verify";
 import Profile from "@/pages/Profile";
@@ -57,6 +58,7 @@ export default function App() {
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
           <Route path="/listings/new" element={<CreateListing />} />
+          <Route path="/listings/:id/edit" element={<EditListing />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/my-activity" element={<MyActivity />} />
           <Route path="/verify" element={<Verify />} />

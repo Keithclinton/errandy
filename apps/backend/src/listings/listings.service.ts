@@ -42,9 +42,9 @@ export class ListingsService {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const where: Prisma.ListingWhereInput = {
-      // The public feed defaults to open listings only; an owner querying their own
-      // listings (e.g. "My Listings") should see every status unless they narrow it down.
-      status: query.status ?? (query.ownerId ? undefined : ListingStatus.open),
+      // Closed/completed tasks stay in the feed (their status just changes) unless
+      // the caller explicitly filters to a status.
+      ...(query.status && { status: query.status }),
       ...(query.ownerId && { ownerId: query.ownerId }),
       ...(query.category && { category: query.category }),
       ...(query.location && { location: { contains: query.location, mode: "insensitive" } }),
