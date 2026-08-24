@@ -27,26 +27,10 @@ const valueProps = [
 ];
 
 const steps = [
-  {
-    icon: ClipboardPlus,
-    title: "Post a task",
-    body: "Describe what you need done, from quick everyday errands to skilled work.",
-  },
-  {
-    icon: UsersRound,
-    title: "Get offers",
-    body: "People nearby send offers with a price and a quick note on how they'll help.",
-  },
-  {
-    icon: MessagesSquare,
-    title: "Chat & agree",
-    body: "Message the provider directly, agree on the details, and share contact info when you're ready.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Complete & rate",
-    body: "Mark the task done, then both of you rate each other. Ratings stay hidden until both are in.",
-  },
+  { icon: ClipboardPlus, title: "Post a task" },
+  { icon: UsersRound, title: "Get offers" },
+  { icon: MessagesSquare, title: "Chat & agree" },
+  { icon: ShieldCheck, title: "Complete & rate" },
 ];
 
 const trustItems = [
@@ -78,10 +62,10 @@ export default function Landing() {
   if (user) return <Navigate to="/browse" replace />;
 
   return (
-    <div className="space-y-20 pb-12">
+    <div className="space-y-12 pb-12">
       {/* Hero */}
       <section className="rounded-xl bg-secondary px-6 py-16">
-        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_1.25fr] lg:items-center">
           <div className="text-center lg:text-left">
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
               Need something done? <span className="text-highlight">Post it.</span>
@@ -124,7 +108,7 @@ export default function Landing() {
           <img
             src={heroIllustration}
             alt="Person browsing tasks on their phone, surrounded by example task offers"
-            className="mx-auto w-full max-w-lg"
+            className="mx-auto w-full max-w-2xl"
           />
         </div>
       </section>
@@ -134,8 +118,8 @@ export default function Landing() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {valueProps.map((prop) => (
             <div key={prop.title} className="flex flex-col items-center text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-primary text-primary">
-                <prop.icon className="h-6 w-6" />
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary text-primary">
+                <prop.icon className="h-9 w-9" />
               </div>
               <h3 className="mt-3 font-medium">{prop.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{prop.body}</p>
@@ -150,18 +134,17 @@ export default function Landing() {
           <h2 className="text-2xl font-semibold">How it works</h2>
           <p className="mt-2 text-muted-foreground">Four steps from posted to done.</p>
         </div>
-        <div className="mt-10 flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:justify-between">
+        <div className="mt-10 flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between">
           {steps.map((step, i) => (
             <Fragment key={step.title}>
-              <div className="flex max-w-[12rem] flex-1 flex-col items-center text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-primary">
-                  <step.icon className="h-6 w-6" />
+              <div className="flex flex-1 flex-col items-center text-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-primary">
+                  <step.icon className="h-9 w-9" />
                 </div>
                 <h3 className="mt-3 font-medium">{step.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
               </div>
               {i < steps.length - 1 && (
-                <ChevronRight className="hidden h-6 w-6 shrink-0 text-muted-foreground/50 lg:mt-5 lg:block" />
+                <ChevronRight className="hidden h-6 w-6 shrink-0 text-muted-foreground/50 lg:block" />
               )}
             </Fragment>
           ))}
@@ -173,7 +156,7 @@ export default function Landing() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {trustItems.map((item) => (
             <div key={item.title} className="flex items-start gap-3">
-              <item.icon className={cn("h-6 w-6 shrink-0", item.highlight ? "text-highlight" : "text-primary-foreground")} />
+              <item.icon className={cn("h-8 w-8 shrink-0", item.highlight ? "text-highlight" : "text-primary-foreground")} />
               <div>
                 <h3 className="font-medium">{item.title}</h3>
                 <p className="mt-1 text-sm text-primary-foreground/70">{item.body}</p>

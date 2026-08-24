@@ -7,7 +7,7 @@ export default {
     container: {
       center: true,
       padding: { DEFAULT: "1rem", lg: "2rem" },
-      screens: { sm: "640px", md: "768px", lg: "1024px", xl: "1200px", "2xl": "1200px" },
+      screens: { sm: "640px", md: "768px", lg: "1024px", xl: "1100px", "2xl": "1100px" },
     },
     extend: {
       colors: {
