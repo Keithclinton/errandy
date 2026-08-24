@@ -37,8 +37,8 @@ export function BidForm({ listingId }: { listingId: string }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
       <div className="space-y-2">
-        <Label htmlFor="amount">Your offer</Label>
-        <Input id="amount" type="number" step="0.01" min="0" {...register("amount")} />
+        <Label htmlFor="amount">Your offer (KES)</Label>
+        <Input id="amount" type="number" step="1" min="0" {...register("amount")} />
         {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
       </div>
       <div className="space-y-2">

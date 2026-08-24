@@ -2,7 +2,12 @@ export function formatMoney(amount?: string | number | null): string | null {
   if (amount === undefined || amount === null || amount === "") return null;
   const n = typeof amount === "string" ? Number(amount) : amount;
   if (Number.isNaN(n)) return null;
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
+  return new Intl.NumberFormat("en-KE", {
+    style: "currency",
+    currency: "KES",
+    currencyDisplay: "code",
+    maximumFractionDigits: 0,
+  }).format(n);
 }
 
 export function formatRelativeTime(iso: string): string {

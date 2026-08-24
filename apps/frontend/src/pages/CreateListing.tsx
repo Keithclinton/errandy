@@ -74,8 +74,8 @@ export default function CreateListing() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="budget">Budget (optional)</Label>
-            <Input id="budget" type="number" step="0.01" min="0" {...register("budget")} />
+            <Label htmlFor="budget">Budget in KES (optional)</Label>
+            <Input id="budget" type="number" step="1" min="0" {...register("budget")} />
           </div>
           <div className="space-y-2">
             <Label>Photos (optional)</Label>
