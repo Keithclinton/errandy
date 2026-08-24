@@ -65,7 +65,7 @@ export default function Landing() {
       <section className="-mx-4 -mt-6 bg-secondary px-4 pb-16 pt-16 sm:-mx-6 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Need something done? <span className="text-primary">Post it.</span>
+            Need something done? <span className="text-highlight">Post it.</span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
             From everyday errands to skilled work, post what you need done and get offers from
@@ -132,30 +132,43 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="rounded-xl bg-secondary px-6 py-12 text-center">
+      <section className="rounded-xl bg-primary px-6 py-12 text-center text-primary-foreground">
         <h2 className="text-2xl font-semibold">Ready to get something done?</h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-primary-foreground/80">
           Sign up in under a minute. Verification only happens once you're ready to post a task or
           make an offer.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg">
+          <Button asChild size="lg" variant="highlight">
             <Link to="/register">Create your account</Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="border-primary-foreground/40 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+          >
             <Link to="/browse">See what's posted</Link>
           </Button>
         </div>
       </section>
 
-      <footer className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
-        <Link to="/terms" className="hover:text-foreground hover:underline">
-          Terms of Service
+      <footer className="-mx-4 -mb-12 space-y-4 bg-primary px-4 py-10 text-center text-sm text-primary-foreground/70 sm:-mx-6 sm:px-6">
+        <Link to="/" className="inline-flex items-center gap-2 text-base font-semibold text-primary-foreground">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-highlight text-sm text-highlight-foreground">
+            E
+          </span>
+          Errandspot
         </Link>
-        <span>·</span>
-        <Link to="/privacy" className="hover:text-foreground hover:underline">
-          Privacy Policy
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Link to="/terms" className="hover:text-primary-foreground hover:underline">
+            Terms of Service
+          </Link>
+          <span>·</span>
+          <Link to="/privacy" className="hover:text-primary-foreground hover:underline">
+            Privacy Policy
+          </Link>
+        </div>
       </footer>
     </div>
   );

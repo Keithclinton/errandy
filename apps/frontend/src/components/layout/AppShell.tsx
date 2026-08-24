@@ -95,7 +95,7 @@ export function AppShell() {
                 <Button asChild variant="ghost" size="sm">
                   <Link to="/login">Log in</Link>
                 </Button>
-                <Button asChild size="sm">
+                <Button asChild size="sm" variant="highlight">
                   <Link to="/register">Sign up</Link>
                 </Button>
               </>

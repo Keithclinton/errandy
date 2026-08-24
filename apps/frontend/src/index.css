@@ -13,25 +13,29 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Light blue primary (sky-600) on white, per product brief. */
-    --primary: 199 89% 48%;
+    /* Indigo + lime brand palette, sampled from the Errandspot moodboard. */
+    --primary: 241 76% 24%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 204 100% 97%;
-    --secondary-foreground: 201 90% 27%;
+    --secondary: 241 45% 97%;
+    --secondary-foreground: 241 60% 28%;
 
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 204 100% 94%;
-    --accent-foreground: 201 90% 27%;
+    --accent: 241 45% 95%;
+    --accent-foreground: 241 60% 28%;
+
+    /* Lime highlight — used sparingly for standout CTAs and brand accents. */
+    --highlight: 71 92% 41%;
+    --highlight-foreground: 241 76% 24%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 199 89% 48%;
+    --ring: 241 76% 24%;
 
     --radius: 0.5rem;
   }
