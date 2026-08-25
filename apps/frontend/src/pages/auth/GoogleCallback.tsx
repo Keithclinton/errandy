@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { AuthLayout } from "./AuthLayout";
 
 export default function GoogleCallback() {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { applyTokens } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState(false);
@@ -13,8 +13,11 @@ export default function GoogleCallback() {
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
-    const accessToken = searchParams.get("accessToken");
-    const refreshToken = searchParams.get("refreshToken");
+    // Tokens arrive in the URL fragment (#accessToken=...), not the query string,
+    // so they're never sent to a server or logged anywhere along the redirect.
+    const params = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const accessToken = params.get("accessToken");
+    const refreshToken = params.get("refreshToken");
     if (!accessToken || !refreshToken) {
       setError(true);
       return;
@@ -22,7 +25,7 @@ export default function GoogleCallback() {
     applyTokens(accessToken, refreshToken)
       .then(() => navigate("/browse", { replace: true }))
       .catch(() => setError(true));
-  }, [applyTokens, navigate, searchParams]);
+  }, [applyTokens, navigate, location.hash]);
 
   return (
     <AuthLayout title={error ? "Something went wrong" : "Signing you in…"}>

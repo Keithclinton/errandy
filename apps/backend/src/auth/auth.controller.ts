@@ -79,9 +79,14 @@ export class AuthController {
     const configuredOrigin = this.config.get<string>("CORS_ORIGIN")?.split(",")[0]?.trim();
     const forwardedProto = (req.headers["x-forwarded-proto"] as string | undefined)?.split(",")[0];
     const frontendUrl = configuredOrigin || `${forwardedProto ?? req.protocol}://${req.get("host")}`;
+    // Tokens go in the URL fragment, not the query string: fragments are never sent
+    // to the server or in the Referer header, so they can't leak via access logs or
+    // third-party resources loaded on the callback page — only the browser sees them.
     const redirectUrl = new URL("/auth/callback", frontendUrl);
-    redirectUrl.searchParams.set("accessToken", tokens.accessToken);
-    redirectUrl.searchParams.set("refreshToken", tokens.refreshToken);
+    redirectUrl.hash = new URLSearchParams({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    }).toString();
     res.redirect(redirectUrl.toString());
   }
 }

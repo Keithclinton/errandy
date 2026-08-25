@@ -207,6 +207,13 @@ export class AuthService {
     if (!email) {
       throw new BadRequestException("Google account has no email");
     }
+    // Google account ownership of `email` is only guaranteed when it's marked verified.
+    // Without this check, an attacker could claim someone else's email through a Google
+    // account they control (e.g. an unverified Workspace alias) and get silently linked
+    // to — and logged into — that person's existing Errandspot account below.
+    if (profile.emails?.[0]?.verified !== true) {
+      throw new UnauthorizedException("Google account email is not verified");
+    }
     let user = await this.prisma.user.findUnique({ where: { googleId } });
     if (!user) {
       user = await this.prisma.user.findUnique({ where: { email } });

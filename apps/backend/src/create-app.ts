@@ -28,9 +28,12 @@ export async function createApp(expressInstance?: Express): Promise<INestApplica
     }),
   );
   app.use(urlencoded({ extended: true }));
+  // The frontend authenticates with a manually-attached Bearer header, never
+  // browser-managed cookies, so there's no `credentials: true` to justify reflecting
+  // arbitrary origins — fail closed (deny cross-origin) if CORS_ORIGIN isn't set,
+  // rather than defaulting to allow-all.
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(",") ?? true,
-    credentials: true,
+    origin: process.env.CORS_ORIGIN?.split(",") ?? false,
   });
   app.useGlobalPipes(
     new ValidationPipe({
