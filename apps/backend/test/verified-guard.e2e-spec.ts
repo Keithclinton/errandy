@@ -35,7 +35,7 @@ describe("Verified guard (e2e)", () => {
     await request(app.getHttpServer())
       .post("/listings")
       .set("Authorization", `Bearer ${ownerToken}`)
-      .send({ title: "Buy groceries", description: "Pick up groceries today", category: "errands", location: "Nairobi" })
+      .send({ title: "Buy groceries", description: "Pick up groceries today", category: "Errands", location: "Nairobi" })
       .expect(403);
 
     await verifyUserKyc(app, ownerToken);
@@ -43,7 +43,7 @@ describe("Verified guard (e2e)", () => {
     const listingRes = await request(app.getHttpServer())
       .post("/listings")
       .set("Authorization", `Bearer ${ownerToken}`)
-      .send({ title: "Buy groceries", description: "Pick up groceries today", category: "errands", location: "Nairobi" })
+      .send({ title: "Buy groceries", description: "Pick up groceries today", category: "Errands", location: "Nairobi" })
       .expect(201);
     const listingId = listingRes.body.id;
 

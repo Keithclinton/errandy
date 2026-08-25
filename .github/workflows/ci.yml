@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: errandy
+          POSTGRES_PASSWORD: errandy
+          POSTGRES_DB: errandy_test
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build backend (typecheck)
+        run: npm run build --workspace=@errandy/backend
+
+      - name: Build frontend (typecheck)
+        run: npm run build --workspace=@errandy/frontend
+
+      - name: Run backend e2e tests
+        run: npm run test:e2e --workspace=@errandy/backend

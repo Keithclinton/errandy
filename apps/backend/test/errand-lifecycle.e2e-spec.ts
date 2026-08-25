@@ -39,7 +39,7 @@ describe("Errand lifecycle (e2e)", () => {
     const listingRes = await request(app.getHttpServer())
       .post("/listings")
       .set("Authorization", `Bearer ${owner.accessToken}`)
-      .send({ title: "Buy groceries", description: "Pick up groceries today", category: "errands", location: "Nairobi", budget: 500 })
+      .send({ title: "Buy groceries", description: "Pick up groceries today", category: "Errands", location: "Nairobi", budget: 500 })
       .expect(201);
     const listingId = listingRes.body.id;
 
