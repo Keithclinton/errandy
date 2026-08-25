@@ -31,11 +31,16 @@ export async function verifyUserKyc(app: INestApplication, accessToken: string):
     .expect(201);
   const jobId = startRes.body.smileJobId;
   const payload = { job_id: jobId, status: "approved" };
-  const raw = JSON.stringify(payload);
-  const signature = createHmac("sha256", process.env.SMILE_ID_WEBHOOK_SECRET!).update(raw).digest("hex");
+  const timestamp = new Date().toISOString();
+  const signature = createHmac("sha256", process.env.SMILE_ID_API_KEY!)
+    .update(timestamp)
+    .update(process.env.SMILE_ID_PARTNER_ID!)
+    .update("sid_request")
+    .digest("base64");
   await request(app.getHttpServer())
     .post("/kyc/webhook")
-    .set("x-smile-signature", signature)
+    .set("smileid-timestamp", timestamp)
+    .set("smileid-request-signature", signature)
     .send(payload)
     .expect(201);
 }

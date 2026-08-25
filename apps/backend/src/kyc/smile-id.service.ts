@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 export interface StartJobResult {
   jobId: string;
@@ -52,10 +52,22 @@ export class SmileIdService {
     return { jobId: data.job_id };
   }
 
-  verifyWebhookSignature(rawBody: Buffer | string, signature: string | undefined): boolean {
-    const secret = this.config.get<string>("SMILE_ID_WEBHOOK_SECRET");
-    if (!secret || !signature) return false;
-    const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
-    return expected === signature;
+  /**
+   * Smile ID signs webhooks with HMAC-SHA256 keyed by the API key, over
+   * `timestamp + partnerId + "sid_request"` (in that order), base64-encoded.
+   * This mirrors their official SDKs' confirm_signature — see
+   * https://docs.usesmileid.com/integration-options/rest-api/signing-your-api-request/generate-signature
+   */
+  verifyWebhookSignature(timestamp: string | undefined, signature: string | undefined): boolean {
+    if (!this.apiKey || !this.partnerId || !timestamp || !signature) return false;
+    const expected = createHmac("sha256", this.apiKey)
+      .update(timestamp)
+      .update(this.partnerId)
+      .update("sid_request")
+      .digest("base64");
+    const expectedBuffer = Buffer.from(expected, "base64");
+    const actualBuffer = Buffer.from(signature, "base64");
+    if (expectedBuffer.length !== actualBuffer.length) return false;
+    return timingSafeEqual(expectedBuffer, actualBuffer);
   }
 }

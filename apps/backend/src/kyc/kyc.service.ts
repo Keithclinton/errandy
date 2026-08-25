@@ -23,8 +23,8 @@ export class KycService {
     return verification;
   }
 
-  async handleWebhook(dto: KycWebhookDto, signature: string | undefined, rawBody: Buffer | string) {
-    if (!this.smileIdService.verifyWebhookSignature(rawBody, signature)) {
+  async handleWebhook(dto: KycWebhookDto, timestamp: string | undefined, signature: string | undefined) {
+    if (!this.smileIdService.verifyWebhookSignature(timestamp, signature)) {
       throw new UnauthorizedException("Invalid webhook signature");
     }
     const verification = await this.prisma.kycVerification.findFirst({

@@ -1,6 +1,5 @@
-import { Body, Controller, Get, Headers, Post, Req } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import type { Request } from "express";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
 import { KycService } from "./kyc.service";
@@ -22,10 +21,10 @@ export class KycController {
   @Post("webhook")
   webhook(
     @Body() dto: KycWebhookDto,
-    @Headers("x-smile-signature") signature: string | undefined,
-    @Req() req: Request & { rawBody?: Buffer },
+    @Headers("smileid-timestamp") timestamp: string | undefined,
+    @Headers("smileid-request-signature") signature: string | undefined,
   ) {
-    return this.kycService.handleWebhook(dto, signature, req.rawBody ?? JSON.stringify(dto));
+    return this.kycService.handleWebhook(dto, timestamp, signature);
   }
 
   @ApiBearerAuth()
