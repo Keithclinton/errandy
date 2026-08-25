@@ -5,6 +5,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { ListingStatus } from "@prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { RequestUploadUrlDto } from "../listings/dto/request-upload-url.dto";
+import { sanitizeFilename } from "../common/sanitize-filename";
 
 @Injectable()
 export class UsersService {
@@ -53,7 +54,7 @@ export class UsersService {
     if (!token) {
       throw new BadRequestException("Image storage is not configured yet");
     }
-    const pathname = `users/${userId}/portfolio/${Date.now()}-${dto.filename}`;
+    const pathname = `users/${userId}/portfolio/${Date.now()}-${sanitizeFilename(dto.filename)}`;
     const clientToken = await generateClientTokenFromReadWriteToken({
       token,
       pathname,

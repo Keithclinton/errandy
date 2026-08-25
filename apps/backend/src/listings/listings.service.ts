@@ -9,6 +9,7 @@ import { UpdateListingDto } from "./dto/update-listing.dto";
 import { QueryListingsDto } from "./dto/query-listings.dto";
 import { RequestUploadUrlDto } from "./dto/request-upload-url.dto";
 import { EVENTS, ListingCreatedEvent, ListingCompletedEvent } from "../common/events/domain-events";
+import { sanitizeFilename } from "../common/sanitize-filename";
 
 @Injectable()
 export class ListingsService {
@@ -131,7 +132,7 @@ export class ListingsService {
     if (!token) {
       throw new BadRequestException("Image storage is not configured yet");
     }
-    const pathname = `listings/${userId}/${Date.now()}-${dto.filename}`;
+    const pathname = `listings/${userId}/${Date.now()}-${sanitizeFilename(dto.filename)}`;
     const clientToken = await generateClientTokenFromReadWriteToken({
       token,
       pathname,
