@@ -21,8 +21,8 @@ export class KycController {
   @Post("webhook")
   webhook(
     @Body() dto: KycWebhookDto,
-    @Headers("smileid-timestamp") timestamp: string | undefined,
-    @Headers("smileid-request-signature") signature: string | undefined,
+    @Headers("response-timestamp") timestamp: string | undefined,
+    @Headers("response-signature") signature: string | undefined,
   ) {
     return this.kycService.handleWebhook(dto, timestamp, signature);
   }

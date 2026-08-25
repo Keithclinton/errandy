@@ -2,15 +2,18 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { createHmac, timingSafeEqual } from "crypto";
 
-export interface StartJobResult {
+export interface WebTokenResult {
   jobId: string;
+  token: string;
+  partnerId: string | undefined;
 }
 
 /**
- * Thin wrapper around Smile ID's job-start API and webhook signature check.
- * Isolated behind this service so tests can mock it without real Smile ID credentials.
- * Field names/webhook shape are Smile ID's documented v2 REST contract — verify against
- * the live sandbox once real partner credentials are issued.
+ * Thin wrapper around Smile ID's v3 Web SDK token API and webhook signature check.
+ * Isolated behind this service so tests can mock it without real Smile ID
+ * credentials. The actual ID + selfie capture happens client-side in Smile ID's
+ * hosted v12 Web SDK (loaded from cdn.usesmileid.com) using the token this
+ * returns; Smile ID posts the result to our webhook once the user completes it.
  */
 @Injectable()
 export class SmileIdService {
@@ -26,46 +29,57 @@ export class SmileIdService {
     return this.config.get<string>("SMILE_ID_API_KEY");
   }
 
-  private get sidServer(): string {
-    return this.config.get<string>("SMILE_ID_SID_SERVER") ?? "0";
+  /** "1" for production, anything else (including unset) for sandbox. */
+  private get baseUrl(): string {
+    const isProduction = this.config.get<string>("SMILE_ID_SID_SERVER") === "1";
+    return isProduction ? "https://api.smileidentity.com" : "https://testapi.smileidentity.com";
   }
 
-  async startVerificationJob(userId: string): Promise<StartJobResult> {
+  private signRequest(timestamp: string): string {
+    return createHmac("sha256", this.apiKey!)
+      .update(timestamp)
+      .update(this.partnerId!)
+      .update("sid_request")
+      .digest("base64");
+  }
+
+  async generateWebToken(userId: string): Promise<WebTokenResult> {
+    const jobId = `${userId}-${Date.now()}`;
     if (!this.partnerId || !this.apiKey) {
-      this.logger.warn("Smile ID credentials not configured — returning a stub job id");
-      return { jobId: `stub-${userId}-${Date.now()}` };
+      this.logger.warn("Smile ID credentials not configured — returning a stub token");
+      return { jobId, token: `stub-token-${jobId}`, partnerId: this.partnerId };
     }
 
-    const response = await fetch(`https://${this.sidServer}.smileidentity.com/v1/upload`, {
+    const form = new FormData();
+    form.append("user_id", userId);
+    form.append("product", "biometric_kyc");
+    form.append("partner_params", JSON.stringify({ job_id: jobId }));
+
+    const response = await fetch(`${this.baseUrl}/v3/token`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        partner_id: this.partnerId,
-        api_key: this.apiKey,
-        partner_params: { user_id: userId, job_id: `${userId}-${Date.now()}`, job_type: 1 },
-      }),
+      headers: {
+        "SmileID-API-Key": this.apiKey,
+        "SmileID-Partner-ID": this.partnerId,
+        Accept: "application/json",
+      },
+      body: form,
     });
     if (!response.ok) {
-      throw new Error(`Smile ID job start failed with status ${response.status}`);
+      throw new Error(`Smile ID token generation failed with status ${response.status}`);
     }
-    const data = (await response.json()) as { job_id: string };
-    return { jobId: data.job_id };
+    const data = (await response.json()) as { token: string };
+    return { jobId, token: data.token, partnerId: this.partnerId };
   }
 
   /**
    * Smile ID signs webhooks with HMAC-SHA256 keyed by the API key, over
-   * `timestamp + partnerId + "sid_request"` (in that order), base64-encoded.
-   * This mirrors their official SDKs' confirm_signature — see
-   * https://docs.usesmileid.com/integration-options/rest-api/signing-your-api-request/generate-signature
+   * `Response-Timestamp + partnerId + "sid_request"` (in that order),
+   * base64-encoded, compared against the Response-Signature header.
+   * See https://docs.usesmileid.com — Verification Webhooks.
    */
   verifyWebhookSignature(timestamp: string | undefined, signature: string | undefined): boolean {
     if (!this.apiKey || !this.partnerId || !timestamp || !signature) return false;
-    const expected = createHmac("sha256", this.apiKey)
-      .update(timestamp)
-      .update(this.partnerId)
-      .update("sid_request")
-      .digest("base64");
-    const expectedBuffer = Buffer.from(expected, "base64");
+    const expectedBuffer = Buffer.from(this.signRequest(timestamp), "base64");
     const actualBuffer = Buffer.from(signature, "base64");
     if (expectedBuffer.length !== actualBuffer.length) return false;
     return timingSafeEqual(expectedBuffer, actualBuffer);

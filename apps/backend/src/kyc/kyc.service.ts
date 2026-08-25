@@ -15,29 +15,33 @@ export class KycService {
     if (!consent) {
       throw new BadRequestException("Explicit KYC consent is required before verification can start");
     }
-    const { jobId } = await this.smileIdService.startVerificationJob(userId);
+    const { jobId, token, partnerId } = await this.smileIdService.generateWebToken(userId);
     const verification = await this.prisma.kycVerification.create({
       data: { userId, smileJobId: jobId, status: KycStatus.pending, consentAt: new Date() },
     });
     await this.prisma.user.update({ where: { id: userId }, data: { kycStatus: KycStatus.pending } });
-    return verification;
+    return { ...verification, token, partnerId };
   }
 
   async handleWebhook(dto: KycWebhookDto, timestamp: string | undefined, signature: string | undefined) {
     if (!this.smileIdService.verifyWebhookSignature(timestamp, signature)) {
       throw new UnauthorizedException("Invalid webhook signature");
     }
+    const jobId = dto.partner_params?.job_id;
     const verification = await this.prisma.kycVerification.findFirst({
-      where: { smileJobId: dto.job_id },
+      where: jobId ? { smileJobId: jobId } : undefined,
       orderBy: { createdAt: "desc" },
     });
     if (!verification) {
       throw new NotFoundException("No matching KYC verification for this job");
     }
-    const status = dto.status === "approved" ? KycStatus.verified : KycStatus.rejected;
+    // Smile ID's v3 status is one of clear | attention | block | error — only a
+    // clean "clear" result counts as verified; anything else needs a human to
+    // look at it (the admin manual override exists for exactly this).
+    const status = dto.status === "clear" ? KycStatus.verified : KycStatus.rejected;
     await this.prisma.kycVerification.update({
       where: { id: verification.id },
-      data: { status, result: dto.result as any, reviewedAt: new Date() },
+      data: { status, result: dto as any, reviewedAt: new Date() },
     });
     await this.prisma.user.update({ where: { id: verification.userId }, data: { kycStatus: status } });
     return { ok: true };

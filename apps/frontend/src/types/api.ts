@@ -166,3 +166,8 @@ export interface KycVerification {
   consentAt: string;
   reviewedAt?: string | null;
 }
+
+export interface StartKycResponse extends KycVerification {
+  token: string;
+  partnerId?: string;
+}

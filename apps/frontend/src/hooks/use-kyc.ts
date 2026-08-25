@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import type { KycStatus, KycVerification } from "@/types/api";
+import type { KycStatus, KycVerification, StartKycResponse } from "@/types/api";
 
 export function useKycStatus() {
   return useQuery({
@@ -13,7 +13,7 @@ export function useKycStatus() {
 export function useStartVerification() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => apiFetch<KycVerification>("/kyc/start", { method: "POST", body: { consent: true } }),
+    mutationFn: () => apiFetch<StartKycResponse>("/kyc/start", { method: "POST", body: { consent: true } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kyc", "status"] });
     },

@@ -3,6 +3,7 @@ import { CheckCircle2, ShieldCheck, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useKycStatus, useStartVerification } from "@/hooks/use-kyc";
 import { ApiError } from "@/lib/api-client";
+import { loadSmileIdSdk } from "@/lib/smile-id";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,17 +15,46 @@ export default function Verify() {
   const { data, isLoading } = useKycStatus();
   const startVerification = useStartVerification();
   const [consent, setConsent] = useState(false);
+  const [launching, setLaunching] = useState(false);
 
   if (isLoading) return <Skeleton className="h-64" />;
 
   const status = data?.kycStatus ?? "none";
 
   const handleStart = async () => {
+    setLaunching(true);
     try {
-      await startVerification.mutateAsync();
-      toast.success("Verification started.");
+      const [{ token, partnerId }] = await Promise.all([startVerification.mutateAsync(), loadSmileIdSdk()]);
+      if (!window.SmileIdentity || !partnerId) {
+        toast.error("Verification isn't set up yet — check back soon.");
+        return;
+      }
+      window.SmileIdentity({
+        token,
+        product: "biometric_kyc",
+        callback_url: "https://errandspot.com/api/kyc/webhook",
+        environment: "production",
+        partner_details: {
+          partner_id: partnerId,
+          name: "Errandspot",
+          logo_url: "https://errandspot.com/icon-512.png",
+          policy_url: "https://errandspot.com/privacy",
+          theme_color: "#110F6D",
+        },
+        onResult: (result) => {
+          if (result.status === "success") {
+            toast.success("Submitted! We'll review it shortly.");
+          } else if (result.status === "cancelled") {
+            toast.info("Verification cancelled.");
+          } else {
+            toast.error("Verification didn't go through. Please try again.");
+          }
+        },
+      });
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Couldn't start verification.");
+    } finally {
+      setLaunching(false);
     }
   };
 
@@ -55,7 +85,7 @@ export default function Verify() {
               <Clock className="h-10 w-10 animate-pulse text-primary" />
               <p className="font-medium">Verification in progress</p>
               <p className="text-sm text-muted-foreground">
-                This page will update automatically once it's reviewed — usually within a few minutes.
+                This page will update automatically once it's reviewed, usually within a few minutes.
               </p>
             </div>
           )}
@@ -71,8 +101,9 @@ export default function Verify() {
           {(status === "none" || status === "rejected") && (
             <>
               <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                The ID + selfie capture step will appear here once verification starts. It's handled by our
-                verification partner — Errandspot never stores your raw ID images.
+                Clicking "Start verification" opens a secure window where you'll take a photo of your ID and a
+                selfie. It's handled entirely by our verification partner; Errandspot never stores your raw ID
+                images.
               </div>
               <div className="flex items-start gap-2">
                 <Checkbox id="consent" checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
@@ -81,8 +112,8 @@ export default function Verify() {
                   partner for the purpose of identity verification.
                 </Label>
               </div>
-              <Button className="w-full" disabled={!consent || startVerification.isPending} onClick={handleStart}>
-                {startVerification.isPending ? "Starting…" : "Start verification"}
+              <Button className="w-full" disabled={!consent || launching} onClick={handleStart}>
+                {launching ? "Starting…" : "Start verification"}
               </Button>
             </>
           )}

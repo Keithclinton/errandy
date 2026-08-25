@@ -30,7 +30,7 @@ export async function verifyUserKyc(app: INestApplication, accessToken: string):
     .send({ consent: true })
     .expect(201);
   const jobId = startRes.body.smileJobId;
-  const payload = { job_id: jobId, status: "approved" };
+  const payload = { status: "clear", partner_params: { job_id: jobId } };
   const timestamp = new Date().toISOString();
   const signature = createHmac("sha256", process.env.SMILE_ID_API_KEY!)
     .update(timestamp)
@@ -39,8 +39,8 @@ export async function verifyUserKyc(app: INestApplication, accessToken: string):
     .digest("base64");
   await request(app.getHttpServer())
     .post("/kyc/webhook")
-    .set("smileid-timestamp", timestamp)
-    .set("smileid-request-signature", signature)
+    .set("response-timestamp", timestamp)
+    .set("response-signature", signature)
     .send(payload)
     .expect(201);
 }
