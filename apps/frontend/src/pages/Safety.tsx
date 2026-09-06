@@ -8,8 +8,8 @@ export default function Safety() {
 
       <h2 className="text-lg font-medium">Identity verification</h2>
       <p className="text-sm">
-        Everyone completes a one-time government ID and selfie check before they can post a task or make an
-        offer, so you know who you're dealing with.
+        Everyone verifies a real phone number with a one-time SMS code before they can post a task or make an
+        offer, so you know you're dealing with a real person.
       </p>
 
       <h2 className="text-lg font-medium">Ratings and reports</h2>

@@ -16,9 +16,8 @@ export default function Terms() {
 
       <h2 className="text-lg font-medium">2. Identity verification</h2>
       <p className="text-sm">
-        Before posting a task or making an offer, you must complete a one-time identity check (government ID
-        + selfie) through our verification partner. You must provide accurate information and consent
-        separately before that check begins.
+        Before posting a task or making an offer, you must verify a phone number you control by entering a
+        one-time code sent to it via SMS. You must provide a phone number that's actually yours.
       </p>
 
       <h2 className="text-lg font-medium">3. Conduct</h2>

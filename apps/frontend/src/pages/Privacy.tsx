@@ -10,8 +10,8 @@ export default function Privacy() {
       <h2 className="text-lg font-medium">1. What we collect</h2>
       <p className="text-sm">
         Account details (name, email, phone), task and offer content, chat messages, and — during
-        one-time identity verification — a government ID and selfie, processed by our verification
-        partner. Errandspot does not store your raw ID images itself.
+        one-time identity verification — an SMS-delivered verification code. The code itself is
+        never stored in readable form and expires shortly after it's sent.
       </p>
 
       <h2 className="text-lg font-medium">2. How we use it</h2>
