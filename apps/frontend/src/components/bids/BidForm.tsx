@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { usePlaceBid } from "@/hooks/use-bids";
+import { useOpenConversation } from "@/hooks/use-chat";
 import { ApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,10 +18,10 @@ type FormValues = z.infer<typeof schema>;
 
 export function BidForm({ listingId }: { listingId: string }) {
   const placeBid = usePlaceBid(listingId);
+  const openConversation = useOpenConversation();
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
@@ -28,7 +29,7 @@ export function BidForm({ listingId }: { listingId: string }) {
     try {
       await placeBid.mutateAsync(values);
       toast.success("Offer sent!");
-      reset();
+      openConversation.mutate({ listingId });
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Couldn't send your offer.");
     }

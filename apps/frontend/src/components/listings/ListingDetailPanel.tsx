@@ -134,17 +134,10 @@ export function ListingDetailPanel({ listingId }: { listingId: string }) {
         </div>
       )}
 
-      {!isOwner && (
-        <div className="flex flex-col gap-2">
-          {isOpen && (
-            <Button asChild variant="highlight">
-              <Link to={`/listings/${listing.id}`}>Make an offer</Link>
-            </Button>
-          )}
-          <Button asChild variant="outline">
-            <Link to={`/listings/${listing.id}`}>Message poster</Link>
-          </Button>
-        </div>
+      {!isOwner && isOpen && (
+        <Button asChild variant="highlight" className="w-full">
+          <Link to={`/listings/${listing.id}`}>Make an offer</Link>
+        </Button>
       )}
     </div>
   );

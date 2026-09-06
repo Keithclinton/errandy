@@ -41,9 +41,6 @@ export default function ListingDetail() {
   const acceptedBid = listing.bids?.find((b) => b.id === listing.acceptedBidId);
   const isAcceptedBidder = !!acceptedBid && acceptedBid.bidderId === user?.id;
   const isParticipant = isOwner || isAcceptedBidder;
-  const myActiveBid = listing.bids?.find(
-    (b) => b.bidderId === user?.id && b.status !== "declined" && b.status !== "withdrawn",
-  );
   const myRating = ratings?.find((r) => r.raterId === user?.id);
   const budget = formatMoney(listing.budget);
 
@@ -145,12 +142,6 @@ export default function ListingDetail() {
                 </p>
               </div>
             </Link>
-          )}
-
-          {myActiveBid && !isOwner && (
-            <Button className="w-full" variant="outline" onClick={() => handleMessage()}>
-              <MessageCircle className="mr-2 h-4 w-4" /> Message poster
-            </Button>
           )}
 
           {isOwner && acceptedBid && (
