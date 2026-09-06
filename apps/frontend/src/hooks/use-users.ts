@@ -13,7 +13,7 @@ export function usePublicProfile(userId: string | undefined) {
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name?: string; phone?: string; avatarUrl?: string; bio?: string; portfolioUrls?: string[] }) =>
+    mutationFn: (input: { name?: string; avatarUrl?: string; bio?: string; portfolioUrls?: string[] }) =>
       apiFetch("/users/me", { method: "PATCH", body: input }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });

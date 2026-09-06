@@ -1,42 +1,23 @@
 import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { json, urlencoded } from "express";
-import { createHmac, timingSafeEqual } from "crypto";
 import * as request from "supertest";
 import { PrismaClient } from "@prisma/client";
 import { AppModule } from "../src/app.module";
-import { SmileIdService } from "../src/kyc/smile-id.service";
+import { SmsService } from "../src/sms/sms.service";
 
-/**
- * Stands in for the real SmileIdService in e2e tests so no test ever makes a
- * live call to Smile ID's API. Signature verification still runs the real
- * algorithm (keyed by the same test credentials verifyUserKyc signs with),
- * so the webhook auth path itself stays covered.
- */
-class FakeSmileIdService {
-  async generateWebToken(userId: string) {
-    const jobId = `${userId}-${Date.now()}`;
-    return { jobId, token: `test-token-${jobId}`, partnerId: process.env.SMILE_ID_PARTNER_ID };
-  }
-
-  verifyWebhookSignature(timestamp: string | undefined, signature: string | undefined): boolean {
-    const apiKey = process.env.SMILE_ID_API_KEY;
-    const partnerId = process.env.SMILE_ID_PARTNER_ID;
-    if (!apiKey || !partnerId || !timestamp || !signature) return false;
-    const expectedBuffer = Buffer.from(
-      createHmac("sha256", apiKey).update(timestamp).update(partnerId).update("sid_request").digest("base64"),
-      "base64",
-    );
-    const actualBuffer = Buffer.from(signature, "base64");
-    if (expectedBuffer.length !== actualBuffer.length) return false;
-    return timingSafeEqual(expectedBuffer, actualBuffer);
+/** Captures OTP codes instead of sending real SMS, so tests can read back what was "sent". */
+class FakeSmsService {
+  static sentCodes = new Map<string, string>();
+  async sendOtp(phone: string, code: string): Promise<void> {
+    FakeSmsService.sentCodes.set(phone, code);
   }
 }
 
 export async function createTestApp(): Promise<INestApplication> {
   const moduleFixture = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(SmileIdService)
-    .useClass(FakeSmileIdService)
+    .overrideProvider(SmsService)
+    .useClass(FakeSmsService)
     .compile();
   const app = moduleFixture.createNestApplication({ bodyParser: false });
   app.use(
@@ -52,26 +33,27 @@ export async function createTestApp(): Promise<INestApplication> {
   return app;
 }
 
-/** Drives a user through KYC via the real start + webhook endpoints (stubbed Smile ID job id, real HMAC). */
+let testPhoneCounter = 0;
+/** Generates a fresh, valid-looking Kenyan phone number so parallel test users never collide on the unique constraint. */
+function nextTestPhone(): string {
+  testPhoneCounter += 1;
+  return `0722${testPhoneCounter.toString().padStart(6, "0")}`;
+}
+
+/** Drives a user through phone + OTP verification via the real endpoints (OTP captured from the fake SMS service). */
 export async function verifyUserKyc(app: INestApplication, accessToken: string): Promise<void> {
-  const startRes = await request(app.getHttpServer())
-    .post("/kyc/start")
-    .set("Authorization", `Bearer ${accessToken}`)
-    .send({ consent: true })
-    .expect(201);
-  const jobId = startRes.body.smileJobId;
-  const payload = { status: "clear", partner_params: { job_id: jobId } };
-  const timestamp = new Date().toISOString();
-  const signature = createHmac("sha256", process.env.SMILE_ID_API_KEY!)
-    .update(timestamp)
-    .update(process.env.SMILE_ID_PARTNER_ID!)
-    .update("sid_request")
-    .digest("base64");
+  const phone = nextTestPhone();
   await request(app.getHttpServer())
-    .post("/kyc/webhook")
-    .set("response-timestamp", timestamp)
-    .set("response-signature", signature)
-    .send(payload)
+    .post("/kyc/phone/request-otp")
+    .set("Authorization", `Bearer ${accessToken}`)
+    .send({ phone })
+    .expect(201);
+  const normalized = `+254${phone.slice(1)}`;
+  const code = FakeSmsService.sentCodes.get(normalized);
+  await request(app.getHttpServer())
+    .post("/kyc/phone/verify-otp")
+    .set("Authorization", `Bearer ${accessToken}`)
+    .send({ phone, code })
     .expect(201);
 }
 
@@ -84,6 +66,7 @@ export async function cleanDatabase(prisma: PrismaClient) {
   await prisma.conversation.deleteMany();
   await prisma.bid.deleteMany();
   await prisma.listing.deleteMany();
+  await prisma.phoneOtp.deleteMany();
   await prisma.kycVerification.deleteMany();
   await prisma.user.deleteMany();
 }

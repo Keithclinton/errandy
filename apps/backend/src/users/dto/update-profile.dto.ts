@@ -10,11 +10,6 @@ export class UpdateProfileDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  phone?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
   avatarUrl?: string;
 
   @ApiProperty({ required: false })

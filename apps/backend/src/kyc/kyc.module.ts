@@ -1,11 +1,12 @@
 import { Module } from "@nestjs/common";
 import { KycService } from "./kyc.service";
 import { KycController } from "./kyc.controller";
-import { SmileIdService } from "./smile-id.service";
+import { SmsModule } from "../sms/sms.module";
 
 @Module({
+  imports: [SmsModule],
   controllers: [KycController],
-  providers: [KycService, SmileIdService],
+  providers: [KycService],
   exports: [KycService],
 })
 export class KycModule {}

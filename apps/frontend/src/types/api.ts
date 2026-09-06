@@ -161,13 +161,7 @@ export interface Paginated<T> {
 export interface KycVerification {
   id: string;
   userId: string;
-  smileJobId?: string | null;
   status: KycStatus;
   consentAt: string;
   reviewedAt?: string | null;
-}
-
-export interface StartKycResponse extends KycVerification {
-  token: string;
-  partnerId?: string;
 }

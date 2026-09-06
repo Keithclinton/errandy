@@ -1,50 +1,95 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
+import { createHash, randomInt } from "crypto";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
-import { SmileIdService } from "./smile-id.service";
+import { SmsService } from "../sms/sms.service";
 import { KycStatus } from "@prisma/client";
-import { KycWebhookDto } from "./dto/kyc-webhook.dto";
+import { normalizeKenyanPhone } from "../common/phone";
+
+const OTP_TTL_MS = 10 * 60 * 1000;
+const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
+const MAX_OTP_ATTEMPTS = 5;
 
 @Injectable()
 export class KycService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly smileIdService: SmileIdService,
+    private readonly smsService: SmsService,
   ) {}
 
-  async startVerification(userId: string, consent: boolean) {
-    if (!consent) {
-      throw new BadRequestException("Explicit KYC consent is required before verification can start");
-    }
-    const { jobId, token, partnerId } = await this.smileIdService.generateWebToken(userId);
-    const verification = await this.prisma.kycVerification.create({
-      data: { userId, smileJobId: jobId, status: KycStatus.pending, consentAt: new Date() },
-    });
-    await this.prisma.user.update({ where: { id: userId }, data: { kycStatus: KycStatus.pending } });
-    return { ...verification, token, partnerId };
+  private hash(code: string): string {
+    return createHash("sha256").update(code).digest("hex");
   }
 
-  async handleWebhook(dto: KycWebhookDto, timestamp: string | undefined, signature: string | undefined) {
-    if (!this.smileIdService.verifyWebhookSignature(timestamp, signature)) {
-      throw new UnauthorizedException("Invalid webhook signature");
+  async requestOtp(userId: string, rawPhone: string): Promise<{ phone: string }> {
+    const phone = normalizeKenyanPhone(rawPhone);
+
+    const claimedBy = await this.prisma.user.findUnique({ where: { phone } });
+    if (claimedBy && claimedBy.id !== userId) {
+      throw new ConflictException("This phone number is already linked to another account");
     }
-    const jobId = dto.partner_params?.job_id;
-    const verification = await this.prisma.kycVerification.findFirst({
-      where: jobId ? { smileJobId: jobId } : undefined,
+
+    const recent = await this.prisma.phoneOtp.findFirst({
+      where: { userId, createdAt: { gt: new Date(Date.now() - OTP_RESEND_COOLDOWN_MS) } },
       orderBy: { createdAt: "desc" },
     });
-    if (!verification) {
-      throw new NotFoundException("No matching KYC verification for this job");
+    if (recent) {
+      throw new BadRequestException("Please wait a minute before requesting another code");
     }
-    // Smile ID's v3 status is one of clear | attention | block | error — only a
-    // clean "clear" result counts as verified; anything else needs a human to
-    // look at it (the admin manual override exists for exactly this).
-    const status = dto.status === "clear" ? KycStatus.verified : KycStatus.rejected;
-    await this.prisma.kycVerification.update({
-      where: { id: verification.id },
-      data: { status, result: dto as any, reviewedAt: new Date() },
+
+    const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
+    await this.prisma.phoneOtp.create({
+      data: {
+        userId,
+        phone,
+        codeHash: this.hash(code),
+        expiresAt: new Date(Date.now() + OTP_TTL_MS),
+      },
     });
-    await this.prisma.user.update({ where: { id: verification.userId }, data: { kycStatus: status } });
-    return { ok: true };
+    await this.smsService.sendOtp(phone, code);
+    return { phone };
+  }
+
+  async verifyOtp(userId: string, rawPhone: string, code: string): Promise<{ kycStatus: KycStatus }> {
+    const phone = normalizeKenyanPhone(rawPhone);
+
+    const otp = await this.prisma.phoneOtp.findFirst({
+      where: { userId, phone, consumedAt: null },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!otp || otp.expiresAt < new Date()) {
+      throw new BadRequestException("That code has expired — request a new one");
+    }
+    if (otp.attempts >= MAX_OTP_ATTEMPTS) {
+      throw new BadRequestException("Too many incorrect attempts — request a new code");
+    }
+    if (otp.codeHash !== this.hash(code)) {
+      await this.prisma.phoneOtp.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
+      throw new BadRequestException("Incorrect code");
+    }
+
+    await this.prisma.phoneOtp.update({ where: { id: otp.id }, data: { consumedAt: new Date() } });
+
+    try {
+      await this.prisma.user.update({ where: { id: userId }, data: { phone, kycStatus: KycStatus.verified } });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        throw new ConflictException("This phone number is already linked to another account");
+      }
+      throw err;
+    }
+
+    await this.prisma.kycVerification.create({
+      data: {
+        userId,
+        status: KycStatus.verified,
+        consentAt: new Date(),
+        reviewedAt: new Date(),
+        result: { method: "phone_otp", phone },
+      },
+    });
+
+    return { kycStatus: KycStatus.verified };
   }
 
   async getStatus(userId: string) {

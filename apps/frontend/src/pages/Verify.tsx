@@ -1,60 +1,45 @@
 import { useState } from "react";
-import { CheckCircle2, ShieldCheck, XCircle, Clock } from "lucide-react";
+import { CheckCircle2, ShieldCheck, XCircle, Clock, Phone } from "lucide-react";
 import { toast } from "sonner";
-import { useKycStatus, useStartVerification } from "@/hooks/use-kyc";
+import { useKycStatus, useRequestOtp, useVerifyOtp } from "@/hooks/use-kyc";
 import { ApiError } from "@/lib/api-client";
-import { loadSmileIdSdk } from "@/lib/smile-id";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 
 export default function Verify() {
   const { data, isLoading } = useKycStatus();
-  const startVerification = useStartVerification();
-  const [consent, setConsent] = useState(false);
-  const [launching, setLaunching] = useState(false);
+  const requestOtp = useRequestOtp();
+  const verifyOtp = useVerifyOtp();
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"phone" | "code">("phone");
 
   if (isLoading) return <Skeleton className="h-64" />;
 
   const status = data?.kycStatus ?? "none";
 
-  const handleStart = async () => {
-    setLaunching(true);
+  const handleSendCode = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const [{ token, partnerId }] = await Promise.all([startVerification.mutateAsync(), loadSmileIdSdk()]);
-      if (!window.SmileIdentity || !partnerId) {
-        toast.error("Verification isn't set up yet — check back soon.");
-        return;
-      }
-      window.SmileIdentity({
-        token,
-        product: "biometric_kyc",
-        callback_url: "https://errandspot.com/api/kyc/webhook",
-        environment: "production",
-        partner_details: {
-          partner_id: partnerId,
-          name: "Errandspot",
-          logo_url: "https://errandspot.com/icon-512.png",
-          policy_url: "https://errandspot.com/privacy",
-          theme_color: "#110F6D",
-        },
-        onResult: (result) => {
-          if (result.status === "success") {
-            toast.success("Submitted! We'll review it shortly.");
-          } else if (result.status === "cancelled") {
-            toast.info("Verification cancelled.");
-          } else {
-            toast.error("Verification didn't go through. Please try again.");
-          }
-        },
-      });
+      await requestOtp.mutateAsync(phone);
+      setStep("code");
+      toast.success("Code sent! Check your SMS.");
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Couldn't start verification.");
-    } finally {
-      setLaunching(false);
+      toast.error(err instanceof ApiError ? err.message : "Couldn't send a code to that number.");
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await verifyOtp.mutateAsync({ phone, code });
+      toast.success("Phone verified!");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "That code didn't work.");
     }
   };
 
@@ -65,7 +50,7 @@ export default function Verify() {
           <ShieldCheck className="mb-2 h-10 w-10 text-primary" />
           <CardTitle>Identity verification</CardTitle>
           <CardDescription>
-            A one-time government ID + selfie check keeps everyone on Errandspot accountable.
+            A quick phone number check keeps everyone on Errandspot accountable.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -84,38 +69,75 @@ export default function Verify() {
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <Clock className="h-10 w-10 animate-pulse text-primary" />
               <p className="font-medium">Verification in progress</p>
-              <p className="text-sm text-muted-foreground">
-                This page will update automatically once it's reviewed, usually within a few minutes.
-              </p>
+              <p className="text-sm text-muted-foreground">This page will update automatically once it's reviewed.</p>
             </div>
           )}
 
           {status === "rejected" && (
-            <div className="flex flex-col items-center gap-2 py-6 text-center">
+            <div className="flex flex-col items-center gap-2 pb-2 pt-6 text-center">
               <XCircle className="h-10 w-10 text-destructive" />
               <p className="font-medium">Verification wasn't approved</p>
-              <p className="text-sm text-muted-foreground">Double-check your details and try again.</p>
+              <p className="text-sm text-muted-foreground">Double-check your number and try again below.</p>
             </div>
           )}
 
-          {(status === "none" || status === "rejected") && (
-            <>
+          {(status === "none" || status === "rejected") && step === "phone" && (
+            <form onSubmit={handleSendCode} className="space-y-4">
               <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                Clicking "Start verification" opens a secure window where you'll take a photo of your ID and a
-                selfie. It's handled entirely by our verification partner; Errandspot never stores your raw ID
-                images.
+                We'll text you a 6-digit code to confirm this number is yours. Your phone number is
+                never shown to other users.
               </div>
-              <div className="flex items-start gap-2">
-                <Checkbox id="consent" checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
-                <Label htmlFor="consent" className="text-sm font-normal leading-snug">
-                  I consent to my government ID and a selfie being processed by Errandspot's verification
-                  partner for the purpose of identity verification.
-                </Label>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone number</Label>
+                <div className="relative">
+                  <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="0712345678"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
               </div>
-              <Button className="w-full" disabled={!consent || launching} onClick={handleStart}>
-                {launching ? "Starting…" : "Start verification"}
+              <Button type="submit" className="w-full" disabled={requestOtp.isPending || !phone.trim()}>
+                {requestOtp.isPending ? "Sending…" : "Send code"}
               </Button>
-            </>
+            </form>
+          )}
+
+          {(status === "none" || status === "rejected") && step === "code" && (
+            <form onSubmit={handleVerifyCode} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter the 6-digit code we sent to <span className="font-medium text-foreground">{phone}</span>.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="code">Verification code</Label>
+                <Input
+                  id="code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  className="text-center text-lg tracking-[0.5em]"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={verifyOtp.isPending || code.length !== 6}>
+                {verifyOtp.isPending ? "Verifying…" : "Verify"}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setStep("phone")}
+                className="w-full text-center text-sm text-muted-foreground hover:text-primary hover:underline"
+              >
+                Use a different number
+              </button>
+            </form>
           )}
         </CardContent>
       </Card>

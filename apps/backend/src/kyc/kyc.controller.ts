@@ -1,33 +1,26 @@
-import { Body, Controller, Get, Headers, Post } from "@nestjs/common";
+import { Body, Controller, Get, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
 import { KycService } from "./kyc.service";
-import { StartVerificationDto } from "./dto/start-verification.dto";
-import { KycWebhookDto } from "./dto/kyc-webhook.dto";
+import { RequestOtpDto } from "./dto/request-otp.dto";
+import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 @ApiTags("kyc")
+@ApiBearerAuth()
 @Controller("kyc")
 export class KycController {
   constructor(private readonly kycService: KycService) {}
 
-  @ApiBearerAuth()
-  @Post("start")
-  start(@CurrentUser() user: AuthUser, @Body() dto: StartVerificationDto) {
-    return this.kycService.startVerification(user.id, dto.consent);
+  @Post("phone/request-otp")
+  requestOtp(@CurrentUser() user: AuthUser, @Body() dto: RequestOtpDto) {
+    return this.kycService.requestOtp(user.id, dto.phone);
   }
 
-  @Public()
-  @Post("webhook")
-  webhook(
-    @Body() dto: KycWebhookDto,
-    @Headers("response-timestamp") timestamp: string | undefined,
-    @Headers("response-signature") signature: string | undefined,
-  ) {
-    return this.kycService.handleWebhook(dto, timestamp, signature);
+  @Post("phone/verify-otp")
+  verifyOtp(@CurrentUser() user: AuthUser, @Body() dto: VerifyOtpDto) {
+    return this.kycService.verifyOtp(user.id, dto.phone, dto.code);
   }
 
-  @ApiBearerAuth()
   @Get("status")
   status(@CurrentUser() user: AuthUser) {
     return this.kycService.getStatus(user.id);

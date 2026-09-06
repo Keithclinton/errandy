@@ -81,7 +81,7 @@ model User {
   passwordHash    String?
   googleId        String?   @unique
   name            String
-  phone           String?
+  phone           String?   @unique
   avatarUrl       String?
   bio             String?
   portfolioUrls   String[]  @default([])
@@ -100,6 +100,7 @@ model User {
   passwordResetExpiresAt DateTime?
 
   kycVerifications   KycVerification[]
+  phoneOtps          PhoneOtp[]
   listings           Listing[]        @relation("ListingOwner")
   bids               Bid[]            @relation("Bidder")
   sentMessages       Message[]        @relation("MessageSender")
@@ -127,6 +128,22 @@ model KycVerification {
 
   @@index([userId])
   @@map("kyc_verifications")
+}
+
+model PhoneOtp {
+  id         String    @id @default(cuid())
+  userId     String
+  phone      String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("phone_otps")
 }
 
 model Listing {
