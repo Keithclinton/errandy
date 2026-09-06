@@ -26,7 +26,6 @@ const mobileNavItems = [
 const guestMenuLinks = [
   { to: "/browse", label: "Browse" },
   { to: "/#how-it-works", label: "How it works" },
-  { to: "/safety", label: "Safety" },
 ];
 
 export function AppShell() {
@@ -59,9 +58,6 @@ export function AppShell() {
               <>
                 <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
                   <Link to="/#how-it-works">How it works</Link>
-                </Button>
-                <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-                  <Link to="/safety">Safety</Link>
                 </Button>
                 <Button
                   variant="ghost"
