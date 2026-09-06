@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Phone, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Phone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { useConversations, useMessages, useSendMessage, useShareContact } from "@/hooks/use-chat";
+import { useAcceptBid } from "@/hooks/use-bids";
 import { ApiError } from "@/lib/api-client";
-import { formatDayLabel, initials } from "@/lib/format";
+import { formatDayLabel, formatMoney, initials } from "@/lib/format";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export default function Thread() {
   const { data: messages, isLoading } = useMessages(conversationId);
   const sendMessage = useSendMessage(conversationId!);
   const shareContact = useShareContact(conversationId!);
+  const acceptBid = useAcceptBid();
   const [body, setBody] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +51,16 @@ export default function Thread() {
     }
   };
 
+  const handleAcceptOffer = async () => {
+    if (!conversation?.theirPendingBidId) return;
+    try {
+      await acceptBid.mutateAsync(conversation.theirPendingBidId);
+      toast.success("Offer accepted!");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Couldn't accept that offer.");
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-8.5rem)] flex-col md:h-[calc(100vh-5rem)]">
       <div className="mb-3 flex items-center gap-3 border-b pb-3">
@@ -71,6 +83,18 @@ export default function Thread() {
           </Button>
         )}
       </div>
+
+      {conversation?.theirPendingBidId && (
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-highlight/40 bg-highlight/10 px-4 py-2.5">
+          <p className="text-sm">
+            {counterpart?.name ?? "They"} offered{" "}
+            <span className="font-semibold">{formatMoney(conversation.theirPendingBidAmount) ?? "an amount"}</span>
+          </p>
+          <Button size="sm" variant="highlight" onClick={handleAcceptOffer} disabled={acceptBid.isPending}>
+            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Accept offer
+          </Button>
+        </div>
+      )}
 
       <div className="flex-1 space-y-1 overflow-y-auto rounded-lg bg-secondary/40 px-2 py-3">
         {isLoading && <Skeleton className="h-full" />}

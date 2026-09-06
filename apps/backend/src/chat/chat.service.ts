@@ -111,6 +111,15 @@ export class ChatService {
         .map((c) => [c.listing.id, acceptedBids.find((b) => b.id === c.listing.acceptedBidId)?.bidderId]),
     );
 
+    // For conversations where the current user is the listing owner, surface the counterpart's
+    // pending bid (if any) so the chat can offer an "Accept offer" action without leaving it.
+    const pendingBids = await this.prisma.bid.findMany({
+      where: {
+        status: "pending",
+        listingId: { in: conversations.filter((c) => c.listing.ownerId === userId).map((c) => c.listingId) },
+      },
+    });
+
     const results = await Promise.all(
       conversations.map(async (conversation) => {
         const counterpartId = conversation.participantIds.find((id) => id !== userId);
@@ -127,6 +136,10 @@ export class ChatService {
         const isWinning = !acceptedBidderId
           ? true // nothing decided yet, conversation is fully active
           : conversation.participantIds.includes(conversation.listing.ownerId) && conversation.participantIds.includes(acceptedBidderId);
+        const theirPendingBid =
+          conversation.listing.ownerId === userId
+            ? (pendingBids.find((b) => b.listingId === conversation.listingId && b.bidderId === counterpartId) ?? null)
+            : null;
         return {
           id: conversation.id,
           listingId: conversation.listingId,
@@ -137,6 +150,8 @@ export class ChatService {
           createdAt: conversation.createdAt,
           isActive: isWinning,
           canShareContact: isWinning && !!acceptedBidderId,
+          theirPendingBidId: theirPendingBid?.id ?? null,
+          theirPendingBidAmount: theirPendingBid?.amount.toString() ?? null,
         };
       }),
     );

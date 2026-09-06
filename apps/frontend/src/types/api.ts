@@ -109,6 +109,9 @@ export interface ConversationSummary {
   isActive: boolean;
   /** True only once this specific conversation's offer was the one accepted. */
   canShareContact: boolean;
+  /** Set when you're the listing owner and the counterpart still has a pending offer you can accept. */
+  theirPendingBidId: string | null;
+  theirPendingBidAmount: string | null;
 }
 
 export interface Message {

@@ -64,6 +64,21 @@ describe("Errand lifecycle (e2e)", () => {
       .send({ amount: 100 })
       .expect(400);
 
+    // Owner opens a chat with a still-pending bidder — the offer should surface there for
+    // an in-chat accept, exactly like the "Accept offer" button in the real chat UI.
+    const preAcceptConversationRes = await request(app.getHttpServer())
+      .get(`/listings/${listingId}/conversation`)
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .query({ with: bidder.userId })
+      .expect(200);
+    const preAcceptConversations = await request(app.getHttpServer())
+      .get("/conversations")
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .expect(200);
+    const preAcceptSummary = preAcceptConversations.body.find((c: any) => c.id === preAcceptConversationRes.body.id);
+    expect(preAcceptSummary.theirPendingBidId).toBe(bidId);
+    expect(preAcceptSummary.theirPendingBidAmount).toBe("450");
+
     await request(app.getHttpServer())
       .patch(`/bids/${bidId}/accept`)
       .set("Authorization", `Bearer ${owner.accessToken}`)
