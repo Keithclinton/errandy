@@ -65,9 +65,11 @@ export default function Thread() {
             <p className="truncate text-xs text-muted-foreground">{conversation.listingTitle}</p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={handleShareContact} disabled={shareContact.isPending}>
-          <Phone className="mr-1.5 h-3.5 w-3.5" /> Share contact
-        </Button>
+        {conversation?.canShareContact && (
+          <Button variant="outline" size="sm" onClick={handleShareContact} disabled={shareContact.isPending}>
+            <Phone className="mr-1.5 h-3.5 w-3.5" /> Share contact
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 space-y-1 overflow-y-auto rounded-lg bg-secondary/40 px-2 py-3">
@@ -96,23 +98,29 @@ export default function Thread() {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSend} className="flex gap-2 border-t pt-3">
-        <Input
-          placeholder="Type a message…"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          autoComplete="off"
-          className="rounded-full"
-        />
-        <Button
-          type="submit"
-          size="icon"
-          className="shrink-0 rounded-full"
-          disabled={sendMessage.isPending || !body.trim()}
-        >
-          <Send className="h-4 w-4" />
-        </Button>
-      </form>
+      {conversation && !conversation.isActive ? (
+        <p className="border-t pt-3 text-center text-sm text-muted-foreground">
+          This task was awarded to someone else, so this chat is read-only.
+        </p>
+      ) : (
+        <form onSubmit={handleSend} className="flex gap-2 border-t pt-3">
+          <Input
+            placeholder="Type a message…"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            autoComplete="off"
+            className="rounded-full"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="shrink-0 rounded-full"
+            disabled={sendMessage.isPending || !body.trim()}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      )}
     </div>
   );
 }

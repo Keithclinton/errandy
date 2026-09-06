@@ -105,6 +105,10 @@ export interface ConversationSummary {
   lastMessage: Message | null;
   unreadCount: number;
   createdAt: string;
+  /** False once another bidder's offer was accepted on this listing — chat becomes read-only. */
+  isActive: boolean;
+  /** True only once this specific conversation's offer was the one accepted. */
+  canShareContact: boolean;
 }
 
 export interface Message {

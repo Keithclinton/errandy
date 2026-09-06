@@ -72,10 +72,11 @@ describe("Errand lifecycle (e2e)", () => {
     const otherBid = await prisma.bid.findUnique({ where: { id: otherBidId } });
     expect(otherBid?.status).toBe("declined");
 
-    const conversation = await prisma.conversation.findFirst({ where: { listingId } });
+    const conversation = await prisma.conversation.findFirst({ where: { listingId, participantIds: { hasEvery: [bidder.userId] } } });
     expect(conversation).toBeTruthy();
     expect(conversation!.participantIds.sort()).toEqual([owner.userId, bidder.userId].sort());
 
+    // Contact can't be shared until an offer is actually accepted — winning conversation, before accept, is exercised above via `bidId`'s own accept below.
     await request(app.getHttpServer())
       .post(`/conversations/${conversation!.id}/messages`)
       .set("Authorization", `Bearer ${bidder.accessToken}`)
@@ -86,6 +87,32 @@ describe("Errand lifecycle (e2e)", () => {
       .post(`/conversations/${conversation!.id}/share-contact`)
       .set("Authorization", `Bearer ${bidder.accessToken}`)
       .expect(201);
+
+    // The declined bidder's chat becomes read-only, and never gets to share contact.
+    const otherConversationRes = await request(app.getHttpServer())
+      .get(`/listings/${listingId}/conversation`)
+      .set("Authorization", `Bearer ${otherBidder.accessToken}`)
+      .expect(200);
+    const otherConversationId = otherConversationRes.body.id;
+
+    await request(app.getHttpServer())
+      .post(`/conversations/${otherConversationId}/messages`)
+      .set("Authorization", `Bearer ${otherBidder.accessToken}`)
+      .send({ body: "Still interested?" })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .post(`/conversations/${otherConversationId}/share-contact`)
+      .set("Authorization", `Bearer ${otherBidder.accessToken}`)
+      .expect(400);
+
+    const conversationsList = await request(app.getHttpServer())
+      .get("/conversations")
+      .set("Authorization", `Bearer ${otherBidder.accessToken}`)
+      .expect(200);
+    const otherSummary = conversationsList.body.find((c: any) => c.id === otherConversationId);
+    expect(otherSummary.isActive).toBe(false);
+    expect(otherSummary.canShareContact).toBe(false);
 
     // Only the owner can complete, and only once a bid is accepted.
     await request(app.getHttpServer())
