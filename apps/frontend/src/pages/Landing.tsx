@@ -124,9 +124,13 @@ export default function Landing() {
       {/* Value props */}
       <section>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {valueProps.map((prop) => (
-            <div key={prop.title} className="flex flex-col items-center text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary text-primary">
+          {valueProps.map((prop, i) => (
+            <div
+              key={prop.title}
+              className="group flex animate-fade-up flex-col items-center text-center"
+              style={{ animationDelay: `${i * 120}ms` }}
+            >
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary text-primary shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-highlight group-hover:text-highlight group-hover:shadow-md">
                 <prop.icon className="h-9 w-9" />
               </div>
               <h3 className="mt-3 font-medium">{prop.title}</h3>
