@@ -30,11 +30,14 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        // vite-plugin-pwa injects its own precache-first NavigationRoute (index.html) by
-        // default, registered *before* the runtimeCaching rule below — so it would win
-        // for every navigation regardless of the NetworkFirst rule. Deny it everything so
-        // it's present but never matches, leaving NetworkFirst as the only real handler.
-        navigateFallbackDenylist: [/.*/],
+        // vite-plugin-pwa defaults to a precache-first NavigationRoute bound to index.html,
+        // registered *before* the runtimeCaching rule below. Since index.html is deliberately
+        // excluded from the precache manifest above, binding a route to it throws at SW
+        // startup (an unhandled rejection that silently aborts every registerRoute call after
+        // it — including the NetworkFirst rule below, which never actually gets registered).
+        // Disabling the fallback outright, rather than denylisting it, avoids constructing it
+        // at all and leaves NetworkFirst as the only navigation handler.
+        navigateFallback: null,
         runtimeCaching: [
           {
             // Page navigations always try the network first (so you get the deploy you
