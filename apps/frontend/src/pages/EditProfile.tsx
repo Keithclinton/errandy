@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth-context";
 import { useUpdateProfile } from "@/hooks/use-users";
 import { ApiError } from "@/lib/api-client";
 import { ImageUploader } from "@/components/listings/ImageUploader";
+import { AvatarUploader } from "@/components/users/AvatarUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +20,7 @@ export default function EditProfile() {
   const { user, refetchUser } = useAuth();
   const updateProfile = useUpdateProfile();
   const [portfolioUrls, setPortfolioUrls] = useState<string[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -30,10 +32,22 @@ export default function EditProfile() {
     if (user) {
       reset({ name: user.name, bio: user.bio ?? "" });
       setPortfolioUrls(user.portfolioUrls ?? []);
+      setAvatarUrl(user.avatarUrl ?? null);
     }
   }, [user, reset]);
 
   if (!user) return null;
+
+  const handleAvatarChange = async (url: string) => {
+    setAvatarUrl(url);
+    try {
+      await updateProfile.mutateAsync({ avatarUrl: url });
+      await refetchUser();
+      toast.success("Profile photo updated!");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Couldn't save your new photo.");
+    }
+  };
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -53,6 +67,8 @@ export default function EditProfile() {
           Add a bio and a few portfolio photos so people know what you're good at.
         </p>
       </div>
+
+      <AvatarUploader name={user.name} value={avatarUrl} onChange={handleAvatarChange} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
