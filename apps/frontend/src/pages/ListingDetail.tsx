@@ -141,7 +141,7 @@ export default function ListingDetail() {
                 <p className="text-xs text-muted-foreground">
                   {listing.owner.ratingCount > 0
                     ? `★ ${listing.owner.ratingAvg.toFixed(1)} (${listing.owner.ratingCount})`
-                    : "No ratings yet"}
+                    : "No reviews yet"}
                 </p>
               </div>
             </Link>
@@ -171,7 +171,7 @@ export default function ListingDetail() {
 
       {ratings && ratings.length > 0 && (
         <div>
-          <h2 className="mb-3 text-lg font-medium">Ratings</h2>
+          <h2 className="mb-3 text-lg font-medium">Reviews</h2>
           <RatingsList ratings={ratings} />
         </div>
       )}

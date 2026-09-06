@@ -34,7 +34,7 @@ export default function Profile() {
           <div>
             <h1 className="text-xl font-semibold">{profile.name}</h1>
             <p className="text-sm text-muted-foreground">
-              {profile.ratingCount > 0 ? `★ ${profile.ratingAvg.toFixed(1)} (${profile.ratingCount} ratings)` : "No ratings yet"}
+              {profile.ratingCount > 0 ? `★ ${profile.ratingAvg.toFixed(1)} (${profile.ratingCount} reviews)` : "No reviews yet"}
             </p>
             <p className="text-xs text-muted-foreground">Joined {formatRelativeTime(profile.createdAt)}</p>
           </div>
@@ -69,7 +69,7 @@ export default function Profile() {
       </div>
 
       <div>
-        <h2 className="mb-3 text-lg font-medium">Ratings</h2>
+        <h2 className="mb-3 text-lg font-medium">Reviews</h2>
         <RatingsList ratings={ratings ?? []} />
       </div>
     </div>

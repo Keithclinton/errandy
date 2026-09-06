@@ -11,7 +11,7 @@ interface RatingItem {
 
 export function RatingsList({ ratings }: { ratings: RatingItem[] }) {
   if (ratings.length === 0) {
-    return <p className="text-sm text-muted-foreground">No ratings yet.</p>;
+    return <p className="text-sm text-muted-foreground">No reviews yet.</p>;
   }
 
   return (
