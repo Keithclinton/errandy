@@ -64,8 +64,16 @@ export default function Landing() {
   return (
     <div className="space-y-12 pb-12">
       {/* Hero */}
-      <section className="rounded-xl bg-secondary px-6 py-16">
-        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_1.25fr] lg:items-center">
+      <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-secondary via-secondary to-primary/10 px-6 py-16">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-highlight/20 blur-3xl"
+        />
+        <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_1.25fr] lg:items-center">
           <div className="text-center lg:text-left">
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
               Need something done? <span className="text-highlight">Post it.</span>
@@ -108,7 +116,7 @@ export default function Landing() {
           <img
             src={heroIllustration}
             alt="Person browsing tasks on their phone, surrounded by example task offers"
-            className="mx-auto hidden w-full max-w-2xl sm:block"
+            className="mx-auto hidden w-full max-w-2xl drop-shadow-xl sm:block"
           />
         </div>
       </section>
@@ -129,22 +137,29 @@ export default function Landing() {
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="scroll-mt-20">
+      <section id="how-it-works" className="scroll-mt-20 rounded-xl bg-gradient-to-b from-secondary/70 to-transparent px-6 py-14">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl font-semibold">How it works</h2>
           <p className="mt-2 text-muted-foreground">Four steps from posted to done.</p>
         </div>
-        <div className="mt-10 flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative mt-10 flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <div
+            aria-hidden
+            className="absolute left-0 right-0 top-10 hidden h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent lg:block"
+          />
           {steps.map((step, i) => (
             <Fragment key={step.title}>
-              <div className="flex flex-1 flex-col items-center text-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-primary">
+              <div className="relative flex flex-1 flex-col items-center text-center">
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-card text-primary shadow-md ring-4 ring-secondary">
                   <step.icon className="h-9 w-9" />
+                  <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-highlight text-xs font-semibold text-highlight-foreground">
+                    {i + 1}
+                  </span>
                 </div>
                 <h3 className="mt-3 font-medium">{step.title}</h3>
               </div>
               {i < steps.length - 1 && (
-                <ChevronRight className="hidden h-6 w-6 shrink-0 text-muted-foreground/50 lg:block" />
+                <ChevronRight className="hidden h-6 w-6 shrink-0 text-primary/40 lg:mt-6 lg:block" />
               )}
             </Fragment>
           ))}

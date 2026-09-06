@@ -32,6 +32,22 @@ export function formatRelativeTime(iso: string): string {
   return "";
 }
 
+export function formatMessageTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+export function formatDayLabel(iso: string): string {
+  const date = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  if (isSameDay(date, today)) return "Today";
+  if (isSameDay(date, yesterday)) return "Yesterday";
+  return date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+}
+
 export function initials(name: string): string {
   return name
     .split(" ")
