@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Clock, BadgeCheck, Star } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
 import { useListing } from "@/hooks/use-listings";
 import { formatMoney, formatRelativeTime, initials } from "@/lib/format";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { isNewListing } from "./ListingListItem";
 
 export function ListingDetailPanel({ listingId }: { listingId: string }) {
+  const { user } = useAuth();
   const { data: listing, isLoading } = useListing(listingId);
 
   if (isLoading || !listing) {
@@ -23,6 +25,7 @@ export function ListingDetailPanel({ listingId }: { listingId: string }) {
   const budget = formatMoney(listing.budget);
   const offerCount = listing.bids?.length ?? 0;
   const isOpen = listing.status === "open";
+  const isOwner = user?.id === listing.ownerId;
 
   return (
     <div className="space-y-6 rounded-xl border bg-card p-6">
@@ -131,16 +134,18 @@ export function ListingDetailPanel({ listingId }: { listingId: string }) {
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        {isOpen && (
-          <Button asChild variant="highlight">
-            <Link to={`/listings/${listing.id}`}>Make an offer</Link>
+      {!isOwner && (
+        <div className="flex flex-col gap-2">
+          {isOpen && (
+            <Button asChild variant="highlight">
+              <Link to={`/listings/${listing.id}`}>Make an offer</Link>
+            </Button>
+          )}
+          <Button asChild variant="outline">
+            <Link to={`/listings/${listing.id}`}>Message poster</Link>
           </Button>
-        )}
-        <Button asChild variant="outline">
-          <Link to={`/listings/${listing.id}`}>Message poster</Link>
-        </Button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
