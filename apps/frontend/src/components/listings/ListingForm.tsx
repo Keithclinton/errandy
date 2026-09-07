@@ -28,11 +28,15 @@ export function ListingForm({
   onSubmit,
   submitLabel,
   submittingLabel,
+  disableSubmit,
+  disableSubmitReason,
 }: {
   defaultValues?: Partial<ListingFormValues>;
   onSubmit: (values: ListingFormValues) => Promise<void>;
   submitLabel: string;
   submittingLabel: string;
+  disableSubmit?: boolean;
+  disableSubmitReason?: React.ReactNode;
 }) {
   const [imageUrls, setImageUrls] = useState<string[]>(defaultValues?.imageUrls ?? []);
   const {
@@ -102,9 +106,14 @@ export function ListingForm({
         <Label>Photos (optional)</Label>
         <ImageUploader value={imageUrls} onChange={setImageUrls} />
       </div>
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? submittingLabel : submitLabel}
-      </Button>
+      {disableSubmit ? (
+        disableSubmitReason
+      ) : (
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? submittingLabel : submitLabel}
+        </Button>
+      )}
+      <p className="text-center text-xs text-muted-foreground">Posting a task uses 1 token from your balance.</p>
     </form>
   );
 }

@@ -10,6 +10,8 @@ export const EVENTS = {
   REPORT_RESOLVED: "report.resolved",
   CONTACT_SHARED: "contact.shared",
   CHAT_STARTED: "chat.started",
+  BID_TOKEN_REQUIRED: "bid.token_required",
+  TOKENS_PURCHASED: "tokens.purchased",
 } as const;
 
 export interface BidReceivedEvent {
@@ -83,4 +85,21 @@ export interface ChatStartedEvent {
   conversationId: string;
   listingId: string;
   startedById: string;
+}
+
+export interface BidTokenRequiredEvent {
+  bidId: string;
+  listingId: string;
+  listingOwnerId: string;
+  bidderId: string;
+  listingTitle: string;
+  amount: string;
+}
+
+export interface TokensPurchasedEvent {
+  userId: string;
+  tokens: number;
+  amountKes: string;
+  purchaseId: string;
+  balanceAfter: number;
 }

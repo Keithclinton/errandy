@@ -68,5 +68,7 @@ export async function cleanDatabase(prisma: PrismaClient) {
   await prisma.listing.deleteMany();
   await prisma.phoneOtp.deleteMany();
   await prisma.kycVerification.deleteMany();
+  await prisma.tokenTransaction.deleteMany();
+  await prisma.tokenPurchase.deleteMany();
   await prisma.user.deleteMany();
 }

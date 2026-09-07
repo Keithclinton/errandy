@@ -10,6 +10,8 @@ import {
   MessageCreatedEvent,
   ListingCompletedEvent,
   ReportResolvedEvent,
+  BidTokenRequiredEvent,
+  TokensPurchasedEvent,
 } from "../common/events/domain-events";
 
 @Injectable()
@@ -89,6 +91,30 @@ export class NotificationsListener {
       body: `Your report was marked as ${event.status}.`,
       entityType: "report",
       entityId: event.reportId,
+    });
+  }
+
+  @OnEvent(EVENTS.BID_TOKEN_REQUIRED)
+  onBidTokenRequired(event: BidTokenRequiredEvent) {
+    return this.notifications.create({
+      userId: event.bidderId,
+      type: NotificationType.bidder_token_required,
+      title: "You need a token to be selected",
+      body: `The owner of "${event.listingTitle}" wants to accept your ${event.amount} KES offer, but you need 1 token first.`,
+      entityType: "listing",
+      entityId: event.listingId,
+    });
+  }
+
+  @OnEvent(EVENTS.TOKENS_PURCHASED)
+  onTokensPurchased(event: TokensPurchasedEvent) {
+    return this.notifications.create({
+      userId: event.userId,
+      type: NotificationType.tokens_purchased,
+      title: "Tokens added",
+      body: `${event.tokens} token(s) added to your balance. New balance: ${event.balanceAfter}.`,
+      entityType: "token_purchase",
+      entityId: event.purchaseId,
     });
   }
 }

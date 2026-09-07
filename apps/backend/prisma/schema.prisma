@@ -64,6 +64,21 @@ enum NotificationType {
   new_message
   please_rate
   report_resolved
+  bidder_token_required
+  tokens_purchased
+}
+
+enum TokenTransactionType {
+  signup_grant
+  listing_post
+  bid_accept_deduction
+  purchase
+}
+
+enum TokenPurchaseStatus {
+  pending
+  completed
+  failed
 }
 
 enum AnalyticsEventType {
@@ -92,6 +107,8 @@ model User {
   ratingCount     Int       @default(0)
   acceptedTermsAt DateTime?
   termsVersion    String?
+  tokenBalance            Int      @default(0)
+  hasReceivedSignupTokens Boolean  @default(false)
   createdAt       DateTime  @default(now())
 
   refreshTokenHash       String?
@@ -101,6 +118,8 @@ model User {
 
   kycVerifications   KycVerification[]
   phoneOtps          PhoneOtp[]
+  tokenTransactions  TokenTransaction[]
+  tokenPurchases     TokenPurchase[]
   listings           Listing[]        @relation("ListingOwner")
   bids               Bid[]            @relation("Bidder")
   sentMessages       Message[]        @relation("MessageSender")
@@ -144,6 +163,44 @@ model PhoneOtp {
 
   @@index([userId])
   @@map("phone_otps")
+}
+
+model TokenTransaction {
+  id                String               @id @default(cuid())
+  userId            String
+  type              TokenTransactionType
+  amount            Int
+  balanceAfter      Int
+  relatedEntityType String?
+  relatedEntityId   String?
+  createdAt         DateTime             @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("token_transactions")
+}
+
+model TokenPurchase {
+  id                 String              @id @default(cuid())
+  userId             String
+  tokens             Int
+  amountKes          Decimal             @db.Decimal(10, 2)
+  phone              String
+  status             TokenPurchaseStatus @default(pending)
+  checkoutRequestId  String?             @unique
+  merchantRequestId  String?
+  mpesaReceiptNumber String?
+  resultCode         Int?
+  resultDesc         String?
+  simulated          Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  completedAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("token_purchases")
 }
 
 model Listing {

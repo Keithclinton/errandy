@@ -14,6 +14,7 @@ import Verify from "@/pages/Verify";
 import Profile from "@/pages/Profile";
 import EditProfile from "@/pages/EditProfile";
 import Notifications from "@/pages/Notifications";
+import BuyTokens from "@/pages/tokens/BuyTokens";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Safety from "@/pages/Safety";
@@ -42,6 +43,7 @@ export default function App() {
         {/* Public */}
         <Route path="/" element={<Landing />} />
         <Route path="/browse" element={<Feed />} />
+        <Route path="/listings/new" element={<CreateListing />} />
         <Route path="/listings/:id" element={<ListingDetail />} />
         <Route path="/users/:id" element={<Profile />} />
         <Route path="/login" element={<Login />} />
@@ -57,7 +59,6 @@ export default function App() {
 
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/listings/new" element={<CreateListing />} />
           <Route path="/listings/:id/edit" element={<EditListing />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/my-activity" element={<MyActivity />} />
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/chat" element={<ConversationsList />} />
           <Route path="/chat/:conversationId" element={<Thread />} />
+          <Route path="/tokens/buy" element={<BuyTokens />} />
         </Route>
 
         {/* Admin — its own section at /admin, on the same domain */}

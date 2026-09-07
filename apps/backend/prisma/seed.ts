@@ -119,6 +119,7 @@ async function main() {
         kycStatus: KycStatus.verified,
         acceptedTermsAt: new Date(),
         termsVersion: "v1",
+        tokenBalance: 5,
       },
     });
     owners.push(owner);

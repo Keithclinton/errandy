@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { TokenBalanceBadge } from "@/components/tokens/TokenBalanceBadge";
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
@@ -89,6 +90,7 @@ export function AppShell() {
             )}
             {user ? (
               <>
+                <TokenBalanceBadge />
                 <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

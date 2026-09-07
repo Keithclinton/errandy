@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { CheckCircle2, ShieldCheck, XCircle, Clock, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useKycStatus, useRequestOtp, useVerifyOtp } from "@/hooks/use-kyc";
+import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/api-client";
+import { peekResumePath, clearResumePath } from "@/lib/auth-resume";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "react-router-dom";
 
 export default function Verify() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { refetchUser } = useAuth();
   const { data, isLoading } = useKycStatus();
   const requestOtp = useRequestOtp();
   const verifyOtp = useVerifyOtp();
@@ -37,6 +42,7 @@ export default function Verify() {
     e.preventDefault();
     try {
       await verifyOtp.mutateAsync({ phone, code });
+      await refetchUser(); // kycStatus lives on the global auth user, not just the kyc-status query
       toast.success("Phone verified!");
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "That code didn't work.");
@@ -54,16 +60,25 @@ export default function Verify() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {status === "verified" && (
-            <div className="flex flex-col items-center gap-2 py-6 text-center">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-              <p className="font-medium">You're verified</p>
-              <p className="text-sm text-muted-foreground">You can post tasks and make offers.</p>
-              <Button asChild className="mt-2">
-                <Link to="/browse">Back to home</Link>
-              </Button>
-            </div>
-          )}
+          {status === "verified" && (() => {
+            const from = (location.state as { from?: Location })?.from?.pathname ?? peekResumePath();
+            return (
+              <div className="flex flex-col items-center gap-2 py-6 text-center">
+                <CheckCircle2 className="h-10 w-10 text-primary" />
+                <p className="font-medium">You're verified</p>
+                <p className="text-sm text-muted-foreground">You can post tasks and make offers.</p>
+                <Button
+                  className="mt-2"
+                  onClick={() => {
+                    clearResumePath();
+                    navigate(from ?? "/browse", { replace: true });
+                  }}
+                >
+                  {from ? "Continue where you left off" : "Back to home"}
+                </Button>
+              </div>
+            );
+          })()}
 
           {status === "pending" && (
             <div className="flex flex-col items-center gap-2 py-6 text-center">

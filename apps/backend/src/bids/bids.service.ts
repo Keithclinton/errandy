@@ -1,15 +1,18 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PrismaService } from "../prisma/prisma.service";
-import { BidStatus, ListingStatus } from "@prisma/client";
+import { BidStatus, ListingStatus, TokenTransactionType } from "@prisma/client";
 import { CreateBidDto } from "./dto/create-bid.dto";
-import { EVENTS, BidReceivedEvent, BidAcceptedEvent, BidDeclinedEvent } from "../common/events/domain-events";
+import { EVENTS, BidReceivedEvent, BidAcceptedEvent, BidDeclinedEvent, BidTokenRequiredEvent } from "../common/events/domain-events";
+import { TokensService } from "../tokens/tokens.service";
+import { InsufficientTokensException } from "../tokens/exceptions/insufficient-tokens.exception";
 
 @Injectable()
 export class BidsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
+    private readonly tokensService: TokensService,
   ) {}
 
   async place(listingId: string, bidderId: string, dto: CreateBidDto) {
@@ -76,17 +79,42 @@ export class BidsService {
       where: { listingId: bid.listingId, status: BidStatus.pending, id: { not: bidId } },
     });
 
-    await this.prisma.$transaction([
-      this.prisma.bid.update({ where: { id: bidId }, data: { status: BidStatus.accepted } }),
-      this.prisma.listing.update({
-        where: { id: bid.listingId },
-        data: { acceptedBidId: bidId, status: ListingStatus.closed },
-      }),
-      this.prisma.bid.updateMany({
-        where: { id: { in: otherPendingBids.map((b) => b.id) } },
-        data: { status: BidStatus.declined },
-      }),
-    ]);
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await this.tokensService.debit(tx, {
+          userId: bid.bidderId,
+          amount: 1,
+          type: TokenTransactionType.bid_accept_deduction,
+          relatedEntityType: "bid",
+          relatedEntityId: bidId,
+        });
+        await tx.bid.update({ where: { id: bidId }, data: { status: BidStatus.accepted } });
+        await tx.listing.update({
+          where: { id: bid.listingId },
+          data: { acceptedBidId: bidId, status: ListingStatus.closed },
+        });
+        await tx.bid.updateMany({
+          where: { id: { in: otherPendingBids.map((b) => b.id) } },
+          data: { status: BidStatus.declined },
+        });
+      });
+    } catch (err) {
+      if (err instanceof InsufficientTokensException) {
+        await this.events.emitAsync(EVENTS.BID_TOKEN_REQUIRED, {
+          bidId,
+          listingId: bid.listingId,
+          listingOwnerId: userId,
+          bidderId: bid.bidderId,
+          listingTitle: bid.listing.title,
+          amount: bid.amount.toString(),
+        } satisfies BidTokenRequiredEvent);
+        throw new ConflictException({
+          message: "This bidder doesn't have enough tokens yet — we've notified them. Try accepting again once they buy one.",
+          code: "BIDDER_INSUFFICIENT_TOKENS",
+        });
+      }
+      throw err;
+    }
 
     await this.events.emitAsync(EVENTS.BID_ACCEPTED, {
       bidId,

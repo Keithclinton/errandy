@@ -6,6 +6,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    public code?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -83,7 +84,7 @@ export async function apiFetch<T = unknown>(path: string, options: RequestOption
   const data = await parseBody(res);
   if (!res.ok) {
     const message = Array.isArray(data?.message) ? data.message.join(", ") : (data?.message ?? res.statusText);
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, message, data?.code);
   }
   return data as T;
 }

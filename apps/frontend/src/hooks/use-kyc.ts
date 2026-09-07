@@ -22,6 +22,7 @@ export function useVerifyOtp() {
       apiFetch<{ kycStatus: KycStatus }>("/kyc/phone/verify-otp", { method: "POST", body: { phone, code } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kyc", "status"] });
+      queryClient.invalidateQueries({ queryKey: ["tokens"] }); // verifying grants the signup bonus
     },
   });
 }

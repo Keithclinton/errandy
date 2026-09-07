@@ -11,7 +11,11 @@ export type NotificationType =
   | "bid_declined"
   | "new_message"
   | "please_rate"
-  | "report_resolved";
+  | "report_resolved"
+  | "bidder_token_required"
+  | "tokens_purchased";
+export type TokenTransactionType = "signup_grant" | "listing_post" | "bid_accept_deduction" | "purchase";
+export type TokenPurchaseStatus = "pending" | "completed" | "failed";
 
 export interface AuthUser {
   id: string;
@@ -35,6 +39,7 @@ export interface User {
   ratingCount: number;
   acceptedTermsAt?: string | null;
   termsVersion?: string | null;
+  tokenBalance: number;
   createdAt: string;
 }
 
@@ -171,4 +176,29 @@ export interface KycVerification {
   status: KycStatus;
   consentAt: string;
   reviewedAt?: string | null;
+}
+
+export interface TokenTransaction {
+  id: string;
+  type: TokenTransactionType;
+  amount: number;
+  balanceAfter: number;
+  relatedEntityType?: string | null;
+  relatedEntityId?: string | null;
+  createdAt: string;
+}
+
+export interface TokenPack {
+  id: string;
+  tokens: number;
+  amountKes: number;
+}
+
+export interface TokenPurchase {
+  id: string;
+  tokens: number;
+  amountKes: string;
+  status: TokenPurchaseStatus;
+  createdAt: string;
+  completedAt?: string | null;
 }

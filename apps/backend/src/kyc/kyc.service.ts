@@ -3,6 +3,7 @@ import { createHash, randomInt } from "crypto";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { SmsService } from "../sms/sms.service";
+import { TokensService } from "../tokens/tokens.service";
 import { KycStatus } from "@prisma/client";
 import { normalizeKenyanPhone } from "../common/phone";
 
@@ -15,6 +16,7 @@ export class KycService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly smsService: SmsService,
+    private readonly tokensService: TokensService,
   ) {}
 
   private hash(code: string): string {
@@ -68,26 +70,27 @@ export class KycService {
       throw new BadRequestException("Incorrect code");
     }
 
-    await this.prisma.phoneOtp.update({ where: { id: otp.id }, data: { consumedAt: new Date() } });
-
     try {
-      await this.prisma.user.update({ where: { id: userId }, data: { phone, kycStatus: KycStatus.verified } });
+      await this.prisma.$transaction(async (tx) => {
+        await tx.phoneOtp.update({ where: { id: otp.id }, data: { consumedAt: new Date() } });
+        await tx.user.update({ where: { id: userId }, data: { phone, kycStatus: KycStatus.verified } });
+        await tx.kycVerification.create({
+          data: {
+            userId,
+            status: KycStatus.verified,
+            consentAt: new Date(),
+            reviewedAt: new Date(),
+            result: { method: "phone_otp", phone },
+          },
+        });
+        await this.tokensService.grantSignupBonusIfEligible(tx, userId);
+      });
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
         throw new ConflictException("This phone number is already linked to another account");
       }
       throw err;
     }
-
-    await this.prisma.kycVerification.create({
-      data: {
-        userId,
-        status: KycStatus.verified,
-        consentAt: new Date(),
-        reviewedAt: new Date(),
-        result: { method: "phone_otp", phone },
-      },
-    });
 
     return { kycStatus: KycStatus.verified };
   }

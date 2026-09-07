@@ -10,6 +10,8 @@ import { QueryListingsDto } from "./dto/query-listings.dto";
 import { RequestUploadUrlDto } from "./dto/request-upload-url.dto";
 import { EVENTS, ListingCreatedEvent, ListingCompletedEvent } from "../common/events/domain-events";
 import { sanitizeFilename } from "../common/sanitize-filename";
+import { TokensService } from "../tokens/tokens.service";
+import { TokenTransactionType } from "@prisma/client";
 
 @Injectable()
 export class ListingsService {
@@ -17,19 +19,30 @@ export class ListingsService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly events: EventEmitter2,
+    private readonly tokensService: TokensService,
   ) {}
 
   async create(ownerId: string, dto: CreateListingDto) {
-    const listing = await this.prisma.listing.create({
-      data: {
-        ownerId,
-        title: dto.title,
-        description: dto.description,
-        category: dto.category,
-        location: dto.location,
-        budget: dto.budget,
-        imageUrls: dto.imageUrls ?? [],
-      },
+    const listing = await this.prisma.$transaction(async (tx) => {
+      const listing = await tx.listing.create({
+        data: {
+          ownerId,
+          title: dto.title,
+          description: dto.description,
+          category: dto.category,
+          location: dto.location,
+          budget: dto.budget,
+          imageUrls: dto.imageUrls ?? [],
+        },
+      });
+      await this.tokensService.debit(tx, {
+        userId: ownerId,
+        amount: 1,
+        type: TokenTransactionType.listing_post,
+        relatedEntityType: "listing",
+        relatedEntityId: listing.id,
+      });
+      return listing;
     });
     await this.events.emitAsync(EVENTS.LISTING_CREATED, {
       listingId: listing.id,

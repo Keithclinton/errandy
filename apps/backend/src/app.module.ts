@@ -16,6 +16,7 @@ import { NotificationsModule } from "./notifications/notifications.module";
 import { AdminModule } from "./admin/admin.module";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { EmailModule } from "./email/email.module";
+import { TokensModule } from "./tokens/tokens.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 
 @Module({
@@ -36,6 +37,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
     NotificationsModule,
     AdminModule,
     AnalyticsModule,
+    TokensModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
