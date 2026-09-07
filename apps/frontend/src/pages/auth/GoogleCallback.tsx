@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
+import { consumeResumePath } from "@/lib/auth-resume";
 import { AuthLayout } from "./AuthLayout";
 
 export default function GoogleCallback() {
@@ -23,7 +24,10 @@ export default function GoogleCallback() {
       return;
     }
     applyTokens(accessToken, refreshToken)
-      .then(() => navigate("/browse", { replace: true }))
+      .then(() => {
+        const resumePath = consumeResumePath();
+        navigate(resumePath ?? "/browse", { replace: true });
+      })
       .catch(() => setError(true));
   }, [applyTokens, navigate, location.hash]);
 

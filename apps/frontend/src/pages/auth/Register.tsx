@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/api-client";
 import { TERMS_VERSION } from "@/lib/constants";
+import { peekResumePath } from "@/lib/auth-resume";
 import { AuthLayout } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ type FormValues = z.infer<typeof schema>;
 export default function Register() {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const {
     register,
@@ -38,7 +40,8 @@ export default function Register() {
     setError(null);
     try {
       await registerUser({ ...values, termsVersion: TERMS_VERSION });
-      navigate("/browse", { replace: true });
+      const from = (location.state as { from?: Location })?.from?.pathname ?? peekResumePath();
+      navigate(from ?? "/browse", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
     }

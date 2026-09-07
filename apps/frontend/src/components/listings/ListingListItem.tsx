@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Clock } from "lucide-react";
-import { formatMoney, formatRelativeTime } from "@/lib/format";
+import { formatListingStatus, formatMoney, formatRelativeTime } from "@/lib/format";
 import { categoryIcon } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -53,8 +53,8 @@ export function ListingListItem({
                   NEW
                 </span>
               )}
-              <Badge variant={STATUS_VARIANT[listing.status]} className="text-[10px] capitalize">
-                {listing.status}
+              <Badge variant={STATUS_VARIANT[listing.status]} className="text-[10px]">
+                {formatListingStatus(listing.status)}
               </Badge>
             </div>
           </div>

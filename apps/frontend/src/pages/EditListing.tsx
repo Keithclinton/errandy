@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { useListing, useUpdateListing } from "@/hooks/use-listings";
 import { ApiError } from "@/lib/api-client";
+import { formatListingStatus } from "@/lib/format";
 import { ListingForm, type ListingFormValues } from "@/components/listings/ListingForm";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -39,7 +40,7 @@ export default function EditListing() {
       <div className="mx-auto max-w-xl space-y-2">
         <h1 className="text-2xl font-semibold">Edit task</h1>
         <p className="text-sm text-muted-foreground">
-          This task is {listing.status} and can no longer be edited.
+          This task is {formatListingStatus(listing.status).toLowerCase()} and can no longer be edited.
         </p>
       </div>
     );

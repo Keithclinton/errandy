@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
 import { RatingsService } from "./ratings.service";
 import { CreateRatingDto } from "./dto/create-rating.dto";
@@ -15,11 +16,13 @@ export class RatingsController {
     return this.ratingsService.submit(listingId, user.id, dto);
   }
 
+  @Public()
   @Get("listings/:listingId/ratings")
-  forListing(@CurrentUser() user: AuthUser, @Param("listingId") listingId: string) {
-    return this.ratingsService.getForListing(listingId, user.id);
+  forListing(@CurrentUser() user: AuthUser | undefined, @Param("listingId") listingId: string) {
+    return this.ratingsService.getForListing(listingId, user?.id);
   }
 
+  @Public()
   @Get("users/:userId/ratings")
   forUser(@Param("userId") userId: string) {
     return this.ratingsService.getForUser(userId);

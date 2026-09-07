@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney, formatRelativeTime } from "@/lib/format";
+import { formatListingStatus, formatMoney, formatRelativeTime } from "@/lib/format";
 
 export default function AdminUserDetail() {
   const { id } = useParams<{ id: string }>();
@@ -78,7 +78,7 @@ export default function AdminUserDetail() {
             {user.listings.length === 0 && <p className="text-sm text-muted-foreground">None</p>}
             {user.listings.map((listing) => (
               <Link key={listing.id} to={`/listings/${listing.id}`} className="block text-sm hover:underline">
-                {listing.title} <span className="text-muted-foreground">· {listing.status}</span>
+                {listing.title} <span className="text-muted-foreground">· {formatListingStatus(listing.status)}</span>
               </Link>
             ))}
           </CardContent>

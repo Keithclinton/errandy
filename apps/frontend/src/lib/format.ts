@@ -48,6 +48,12 @@ export function formatDayLabel(iso: string): string {
   return date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
 }
 
+const LISTING_STATUS_LABELS = { open: "Open", closed: "Assigned", completed: "Completed" } as const;
+
+export function formatListingStatus(status: keyof typeof LISTING_STATUS_LABELS): string {
+  return LISTING_STATUS_LABELS[status];
+}
+
 export function initials(name: string): string {
   return name
     .split(" ")

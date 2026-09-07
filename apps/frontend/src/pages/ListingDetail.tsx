@@ -6,14 +6,13 @@ import { useListing, useCompleteListing } from "@/hooks/use-listings";
 import { useListingRatings } from "@/hooks/use-ratings";
 import { useOpenConversation } from "@/hooks/use-chat";
 import { ApiError } from "@/lib/api-client";
-import { formatMoney, initials } from "@/lib/format";
+import { formatListingStatus, formatMoney, initials } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { VerifiedGate } from "@/components/layout/VerifiedGate";
 import { BidForm } from "@/components/bids/BidForm";
 import { BidList } from "@/components/bids/BidList";
 import { RatingsList } from "@/components/ratings/RatingsList";
@@ -62,7 +61,7 @@ export default function ListingDetail() {
       <div>
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{listing.category}</Badge>
-          <Badge variant="outline">{listing.status}</Badge>
+          <Badge variant="outline">{formatListingStatus(listing.status)}</Badge>
           {isOwner && listing.status === "open" && (
             <Link
               to={`/listings/${listing.id}/edit`}
@@ -113,9 +112,7 @@ export default function ListingDetail() {
           {listing.status !== "open" ? (
             <p className="text-sm text-muted-foreground">This task is no longer accepting offers.</p>
           ) : (
-            <VerifiedGate>
-              <BidForm listingId={listing.id} />
-            </VerifiedGate>
+            <BidForm listingId={listing.id} />
           )}
         </div>
       )}

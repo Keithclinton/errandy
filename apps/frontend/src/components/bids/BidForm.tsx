@@ -4,6 +4,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { usePlaceBid } from "@/hooks/use-bids";
 import { useOpenConversation } from "@/hooks/use-chat";
+import { useDraftGatedSubmit } from "@/hooks/use-draft-gated-submit";
 import { ApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,13 +20,8 @@ type FormValues = z.infer<typeof schema>;
 export function BidForm({ listingId }: { listingId: string }) {
   const placeBid = usePlaceBid(listingId);
   const openConversation = useOpenConversation();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  const onSubmit = async (values: FormValues) => {
+  const realSubmit = async (values: FormValues) => {
     try {
       await placeBid.mutateAsync(values);
       toast.success("Offer sent!");
@@ -35,8 +31,20 @@ export function BidForm({ listingId }: { listingId: string }) {
     }
   };
 
+  const { draft, submit } = useDraftGatedSubmit<FormValues>({
+    draftKey: `bid:${listingId}`,
+    resumePath: `/listings/${listingId}`,
+    onSubmit: realSubmit,
+  });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: draft ?? undefined });
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+    <form onSubmit={handleSubmit(submit)} className="space-y-3">
       <div className="space-y-2">
         <Label htmlFor="amount">Your offer (KES)</Label>
         <Input id="amount" type="number" step="1" min="0" {...register("amount")} />

@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/api-client";
 import { API_URL } from "@/lib/constants";
+import { peekResumePath } from "@/lib/auth-resume";
 import { AuthLayout } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,7 @@ export default function Login() {
     setError(null);
     try {
       await login(values.email, values.password);
-      const from = (location.state as { from?: Location })?.from?.pathname ?? "/browse";
+      const from = (location.state as { from?: Location })?.from?.pathname ?? peekResumePath() ?? "/browse";
       navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
