@@ -40,7 +40,12 @@ export class UsersService {
       },
     });
     if (!user) throw new NotFoundException("User not found");
-    return user;
+
+    const tasksCompleted = await this.prisma.bid.count({
+      where: { bidderId: id, status: "accepted", listing: { status: ListingStatus.completed } },
+    });
+
+    return { ...user, tasksCompleted };
   }
 
   async updateProfile(id: string, dto: UpdateProfileDto) {

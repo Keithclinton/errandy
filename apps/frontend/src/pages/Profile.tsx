@@ -36,7 +36,10 @@ export default function Profile() {
             <p className="text-sm text-muted-foreground">
               {profile.ratingCount > 0 ? `★ ${profile.ratingAvg.toFixed(1)} (${profile.ratingCount} reviews)` : "No reviews yet"}
             </p>
-            <p className="text-xs text-muted-foreground">Joined {formatRelativeTime(profile.createdAt)}</p>
+            <p className="text-xs text-muted-foreground">
+              {profile.tasksCompleted} task{profile.tasksCompleted === 1 ? "" : "s"} completed · Joined{" "}
+              {formatRelativeTime(profile.createdAt)}
+            </p>
           </div>
         </div>
         {id && <ReportDialog targetType="user" targetId={id} />}

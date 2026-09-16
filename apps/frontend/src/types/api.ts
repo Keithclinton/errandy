@@ -52,6 +52,7 @@ export interface PublicProfile {
   ratingAvg: number;
   ratingCount: number;
   createdAt: string;
+  tasksCompleted: number;
   listings: Pick<Listing, "id" | "title" | "category" | "location" | "budget" | "createdAt">[];
 }
 
