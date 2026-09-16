@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { AdminGuard } from "../common/guards/admin.guard";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
@@ -38,6 +38,14 @@ export class AdminController {
   @Patch("users/:id/kyc")
   setUserKycStatus(@CurrentUser() admin: AuthUser, @Param("id") id: string, @Body() dto: SetKycStatusDto) {
     return this.adminService.setUserKycStatus(id, admin.id, dto);
+  }
+
+  @Delete("users/:id")
+  deleteUser(@CurrentUser() admin: AuthUser, @Param("id") id: string) {
+    if (id === admin.id) {
+      throw new BadRequestException("You can't delete your own account from here");
+    }
+    return this.adminService.deleteUser(id);
   }
 
   @Get("reports")

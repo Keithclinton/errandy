@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useAdminUserDetail, useSuspendUser, useReinstateUser, useSetUserKycStatus } from "@/hooks/use-admin";
 import type { KycStatus } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
+import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ export default function AdminUserDetail() {
           <Button variant="outline" onClick={handleToggle}>
             {user.status === "suspended" ? "Reinstate" : "Suspend"}
           </Button>
+          <DeleteUserDialog userId={user.id} email={user.email} />
         </div>
       </div>
 

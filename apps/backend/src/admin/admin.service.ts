@@ -123,4 +123,43 @@ export class AdminService {
     if (!listing) throw new NotFoundException("Listing not found");
     return this.prisma.listing.update({ where: { id: listingId }, data: { status: ListingStatus.closed } });
   }
+
+  /**
+   * Hard-deletes a user and everything tied to them. Not just their own rows — a user
+   * can own listings that *other* people bid on, rated, and chatted about, so this has to
+   * clean up those too, or the delete would fail on a foreign key (or worse, half-succeed).
+   * Wrapped in one transaction so it's all-or-nothing.
+   */
+  async deleteUser(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException("User not found");
+
+    await this.prisma.$transaction(async (tx) => {
+      const ownedListings = await tx.listing.findMany({ where: { ownerId: userId }, select: { id: true } });
+      const listingIds = ownedListings.map((l) => l.id);
+
+      const conversations = await tx.conversation.findMany({
+        where: { OR: [{ listingId: { in: listingIds } }, { participantIds: { has: userId } }] },
+        select: { id: true },
+      });
+      const conversationIds = conversations.map((c) => c.id);
+
+      await tx.message.deleteMany({ where: { OR: [{ conversationId: { in: conversationIds } }, { senderId: userId }] } });
+      await tx.conversation.deleteMany({ where: { id: { in: conversationIds } } });
+      await tx.rating.deleteMany({ where: { OR: [{ listingId: { in: listingIds } }, { raterId: userId }, { rateeId: userId }] } });
+      await tx.bid.deleteMany({ where: { OR: [{ listingId: { in: listingIds } }, { bidderId: userId }] } });
+      await tx.listing.deleteMany({ where: { id: { in: listingIds } } });
+      await tx.report.deleteMany({ where: { reporterId: userId } });
+      await tx.report.updateMany({ where: { reviewedBy: userId }, data: { reviewedBy: null } });
+      await tx.notification.deleteMany({ where: { userId } });
+      await tx.analyticsEvent.deleteMany({ where: { userId } });
+      await tx.kycVerification.deleteMany({ where: { userId } });
+      await tx.phoneOtp.deleteMany({ where: { userId } });
+      await tx.tokenTransaction.deleteMany({ where: { userId } });
+      await tx.tokenPurchase.deleteMany({ where: { userId } });
+      await tx.user.delete({ where: { id: userId } });
+    });
+
+    return { ok: true };
+  }
 }

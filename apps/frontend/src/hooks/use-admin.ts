@@ -35,6 +35,15 @@ function useAdminUserAction(action: "suspend" | "reinstate") {
 export const useSuspendUser = () => useAdminUserAction("suspend");
 export const useReinstateUser = () => useAdminUserAction("reinstate");
 
+/** Hard-deletes a user and everything tied to them (listings, bids, chats, ratings). Irreversible. */
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => apiFetch(`/admin/users/${userId}`, { method: "DELETE" }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+  });
+}
+
 /**
  * Manually sets a user's KYC status, bypassing Smile ID — for use while the real
  * verification provider isn't configured, or for one-off support overrides later.
