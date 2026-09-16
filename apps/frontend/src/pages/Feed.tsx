@@ -61,8 +61,12 @@ export default function Feed() {
             <Input
               placeholder="Search tasks…"
               className="pl-9"
+              enterKeyHint="search"
               value={filters.search ?? ""}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
             />
           </div>
           <div className="relative sm:w-56">
@@ -70,8 +74,12 @@ export default function Feed() {
             <Input
               placeholder="Location"
               className="pl-9"
+              enterKeyHint="search"
               value={filters.location ?? ""}
               onChange={(e) => setFilters((f) => ({ ...f, location: e.target.value, page: 1 }))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
             />
           </div>
         </div>
