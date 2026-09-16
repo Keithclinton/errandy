@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PrismaService } from "../prisma/prisma.service";
 import { BidStatus, ListingStatus, TokenTransactionType } from "@prisma/client";
@@ -7,14 +7,18 @@ import { EVENTS, BidReceivedEvent, BidAcceptedEvent, BidDeclinedEvent, BidTokenR
 import { TokensService } from "../tokens/tokens.service";
 import { InsufficientTokensException } from "../tokens/exceptions/insufficient-tokens.exception";
 import { RatingsService } from "../ratings/ratings.service";
+import { ChatService } from "../chat/chat.service";
 
 @Injectable()
 export class BidsService {
+  private readonly logger = new Logger(BidsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
     private readonly tokensService: TokensService,
     private readonly ratingsService: RatingsService,
+    private readonly chatService: ChatService,
   ) {}
 
   async place(listingId: string, bidderId: string, dto: CreateBidDto) {
@@ -37,6 +41,21 @@ export class BidsService {
       bidderId,
       amount: bid.amount.toString(),
     } satisfies BidReceivedEvent);
+    // Best-effort: opens the chat with the offer already said, so the poster never lands on
+    // an empty thread. Never let a hiccup here fail the bid itself.
+    try {
+      const [owner, bidder] = await Promise.all([
+        this.prisma.user.findUnique({ where: { id: listing.ownerId }, select: { name: true } }),
+        this.prisma.user.findUnique({ where: { id: bidderId }, select: { name: true } }),
+      ]);
+      const formattedAmount = `KES ${dto.amount.toLocaleString("en-KE")}`;
+      let opening = `Hello ${owner?.name ?? "there"}, I'm ${bidder?.name ?? "a provider"} and this is my offer: ${formattedAmount}.`;
+      if (dto.message?.trim()) opening += ` ${dto.message.trim()}`;
+      const conversation = await this.chatService.getOrCreateConversation(listingId, bidderId);
+      await this.chatService.sendMessage(conversation.id, bidderId, opening);
+    } catch (err) {
+      this.logger.warn(`Couldn't send the opening offer message for bid ${bid.id}: ${err}`);
+    }
     return bid;
   }
 

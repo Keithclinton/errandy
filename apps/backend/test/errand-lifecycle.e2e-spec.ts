@@ -50,6 +50,39 @@ describe("Errand lifecycle (e2e)", () => {
       .expect(201);
     const bidId = bidRes.body.id;
 
+    // Placing a bid opens the chat with the offer already said, instead of a blank thread —
+    // and the owner gets a "new message" notification for it.
+    const bidConversation = await prisma.conversation.findFirstOrThrow({
+      where: { listingId, participantIds: { hasEvery: [bidder.userId] } },
+    });
+    const openingMessages = await prisma.message.findMany({ where: { conversationId: bidConversation.id } });
+    expect(openingMessages).toHaveLength(1);
+    expect(openingMessages[0].senderId).toBe(bidder.userId);
+    expect(openingMessages[0].body).toContain("owner@test.com"); // name defaults to email in these tests
+    expect(openingMessages[0].body).toContain("bidder@test.com");
+    expect(openingMessages[0].body).toContain("KES 450");
+    expect(openingMessages[0].body).toContain("I can do this in 1 hour");
+
+    // Placing a bid raises two separate notifications for the owner: "new bid received"
+    // (about the bid itself) and "new message" (about the opening chat message).
+    const ownerUnreadAfterBid = await request(app.getHttpServer())
+      .get("/notifications/unread-count")
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .expect(200);
+    expect(ownerUnreadAfterBid.body.unreadCount).toBe(2);
+
+    // Reading the thread should clear only the "new message" one automatically, without a
+    // separate trip to mark it read — the bid notification is unrelated and stays unread.
+    await request(app.getHttpServer())
+      .get(`/conversations/${bidConversation.id}/messages`)
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .expect(200);
+    const ownerUnreadAfterReading = await request(app.getHttpServer())
+      .get("/notifications/unread-count")
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .expect(200);
+    expect(ownerUnreadAfterReading.body.unreadCount).toBe(1);
+
     const otherBidRes = await request(app.getHttpServer())
       .post(`/listings/${listingId}/bids`)
       .set("Authorization", `Bearer ${otherBidder.accessToken}`)
