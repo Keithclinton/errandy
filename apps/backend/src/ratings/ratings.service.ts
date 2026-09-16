@@ -63,6 +63,29 @@ export class RatingsService {
     return rating;
   }
 
+  /**
+   * Uber-style gate: a user can't post a new task or make a new offer while they still
+   * have a completed job — one they posted, or one they won as the accepted bidder —
+   * that they haven't rated yet.
+   */
+  async assertNoUnratedCompletedListings(userId: string): Promise<void> {
+    const unrated = await this.prisma.listing.findFirst({
+      where: {
+        status: ListingStatus.completed,
+        OR: [{ ownerId: userId }, { acceptedBid: { bidderId: userId } }],
+        ratings: { none: { raterId: userId } },
+      },
+      select: { id: true, title: true },
+    });
+    if (unrated) {
+      throw new ConflictException({
+        message: `Rate "${unrated.title}" before posting or bidding on anything else.`,
+        code: "UNRATED_COMPLETED_LISTING",
+        listingId: unrated.id,
+      });
+    }
+  }
+
   private isRevealed(completedAt: Date | null, ratingsCount: number): boolean {
     if (ratingsCount >= 2) return true;
     if (!completedAt) return false;

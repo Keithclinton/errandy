@@ -20,6 +20,11 @@ export default function CreateListing() {
       toast.success("Task posted!");
       navigate(`/listings/${listing.id}`);
     } catch (err) {
+      if (err instanceof ApiError && err.code === "UNRATED_COMPLETED_LISTING") {
+        const listingId = err.details?.listingId as string | undefined;
+        toast.error(err.message, listingId ? { action: { label: "Rate it", onClick: () => navigate(`/listings/${listingId}`) } } : undefined);
+        return;
+      }
       toast.error(err instanceof ApiError ? err.message : "Couldn't post your task.");
     }
   };

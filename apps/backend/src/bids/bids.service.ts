@@ -6,6 +6,7 @@ import { CreateBidDto } from "./dto/create-bid.dto";
 import { EVENTS, BidReceivedEvent, BidAcceptedEvent, BidDeclinedEvent, BidTokenRequiredEvent } from "../common/events/domain-events";
 import { TokensService } from "../tokens/tokens.service";
 import { InsufficientTokensException } from "../tokens/exceptions/insufficient-tokens.exception";
+import { RatingsService } from "../ratings/ratings.service";
 
 @Injectable()
 export class BidsService {
@@ -13,9 +14,11 @@ export class BidsService {
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
     private readonly tokensService: TokensService,
+    private readonly ratingsService: RatingsService,
   ) {}
 
   async place(listingId: string, bidderId: string, dto: CreateBidDto) {
+    await this.ratingsService.assertNoUnratedCompletedListings(bidderId);
     const listing = await this.prisma.listing.findUnique({ where: { id: listingId } });
     if (!listing) throw new NotFoundException("Listing not found");
     if (listing.status !== ListingStatus.open) {

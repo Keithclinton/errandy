@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { usePlaceBid } from "@/hooks/use-bids";
 import { useOpenConversation } from "@/hooks/use-chat";
 import { useDraftGatedSubmit } from "@/hooks/use-draft-gated-submit";
@@ -20,6 +21,7 @@ type FormValues = z.infer<typeof schema>;
 export function BidForm({ listingId }: { listingId: string }) {
   const placeBid = usePlaceBid(listingId);
   const openConversation = useOpenConversation();
+  const navigate = useNavigate();
 
   const realSubmit = async (values: FormValues) => {
     try {
@@ -27,6 +29,14 @@ export function BidForm({ listingId }: { listingId: string }) {
       toast.success("Offer sent!");
       openConversation.mutate({ listingId });
     } catch (err) {
+      if (err instanceof ApiError && err.code === "UNRATED_COMPLETED_LISTING") {
+        const unratedListingId = err.details?.listingId as string | undefined;
+        toast.error(
+          err.message,
+          unratedListingId ? { action: { label: "Rate it", onClick: () => navigate(`/listings/${unratedListingId}`) } } : undefined,
+        );
+        return;
+      }
       toast.error(err instanceof ApiError ? err.message : "Couldn't send your offer.");
     }
   };

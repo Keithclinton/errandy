@@ -11,6 +11,7 @@ import { RequestUploadUrlDto } from "./dto/request-upload-url.dto";
 import { EVENTS, ListingCreatedEvent, ListingCompletedEvent } from "../common/events/domain-events";
 import { sanitizeFilename } from "../common/sanitize-filename";
 import { TokensService } from "../tokens/tokens.service";
+import { RatingsService } from "../ratings/ratings.service";
 import { TokenTransactionType } from "@prisma/client";
 
 @Injectable()
@@ -20,9 +21,11 @@ export class ListingsService {
     private readonly config: ConfigService,
     private readonly events: EventEmitter2,
     private readonly tokensService: TokensService,
+    private readonly ratingsService: RatingsService,
   ) {}
 
   async create(ownerId: string, dto: CreateListingDto) {
+    await this.ratingsService.assertNoUnratedCompletedListings(ownerId);
     const listing = await this.prisma.$transaction(async (tx) => {
       const listing = await tx.listing.create({
         data: {
