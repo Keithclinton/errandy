@@ -16,7 +16,6 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
 import heroIllustration from "@/assets/hero-illustration.webp";
 import logoIcon from "@/assets/logo-icon.png";
 
@@ -35,10 +34,10 @@ const steps = [
 ];
 
 const trustItems = [
-  { icon: ShieldCheck, title: "Verified Users", body: "Real people, verified for safety.", highlight: false },
-  { icon: MapPin, title: "Built for Local", body: "People nearby. Faster help.", highlight: true },
-  { icon: Star, title: "Rated & Reviewed", body: "Real ratings. Make better choices.", highlight: false },
-  { icon: LayoutGrid, title: "Variety of Tasks", body: "Errands, labour, skills & more.", highlight: false },
+  { icon: ShieldCheck, title: "Verified Users", body: "Real people, verified for safety." },
+  { icon: MapPin, title: "Built for Local", body: "People nearby. Faster help." },
+  { icon: Star, title: "Rated & Reviewed", body: "Real ratings. Make better choices." },
+  { icon: LayoutGrid, title: "Variety of Tasks", body: "Errands, labour, skills & more." },
 ];
 
 const footerLinks = [
@@ -176,7 +175,7 @@ export default function Landing() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {trustItems.map((item) => (
             <div key={item.title} className="flex items-start gap-3">
-              <item.icon className={cn("h-8 w-8 shrink-0", item.highlight ? "text-highlight" : "text-primary-foreground")} />
+              <item.icon className="h-8 w-8 shrink-0 text-[#68c540]" />
               <div>
                 <h3 className="font-medium">{item.title}</h3>
                 <p className="mt-1 text-sm text-primary-foreground/70">{item.body}</p>
