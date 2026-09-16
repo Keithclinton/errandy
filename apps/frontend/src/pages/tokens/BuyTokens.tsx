@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Coins, Check } from "lucide-react";
+import { Coins, Check, Smartphone, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { useInitiatePurchase, useTokenPacks, useTokenTransactions } from "@/hooks/use-tokens";
@@ -19,6 +19,13 @@ const TRANSACTION_LABELS: Record<string, string> = {
   purchase: "Bought tokens",
 };
 
+// Even though today's payment simulates an instant success, a real M-Pesa STK push
+// takes several seconds for the customer to approve on their phone. Holding the
+// "waiting" screen for at least this long keeps the experience honest either way,
+// rather than flashing straight to a result.
+const MIN_WAIT_MS = 2500;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export default function BuyTokens() {
   const { user } = useAuth();
   const { data: packs, isLoading: packsLoading } = useTokenPacks();
@@ -26,17 +33,50 @@ export default function BuyTokens() {
   const initiatePurchase = useInitiatePurchase();
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [phone, setPhone] = useState(user?.phone ?? "");
+  const [status, setStatus] = useState<"idle" | "waiting" | "failed">("idle");
+
+  const selectedPack = packs?.find((p) => p.id === selectedPackId);
 
   const handleBuy = async () => {
     if (!selectedPackId || !phone.trim()) return;
+    setStatus("waiting");
     try {
-      await initiatePurchase.mutateAsync({ packId: selectedPackId, phone: phone.trim() });
+      const [result] = await Promise.all([
+        initiatePurchase.mutateAsync({ packId: selectedPackId, phone: phone.trim() }),
+        sleep(MIN_WAIT_MS),
+      ]);
+      if (result.status !== "completed") {
+        setStatus("failed");
+        return;
+      }
       toast.success("Tokens added to your balance!");
       setSelectedPackId(null);
+      setStatus("idle");
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Couldn't complete that purchase.");
+      setStatus("failed");
     }
   };
+
+  if (status === "waiting") {
+    return (
+      <div className="mx-auto max-w-lg">
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <span className="relative flex h-14 w-14 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/30" />
+              <Smartphone className="relative h-8 w-8 text-primary" />
+            </span>
+            <p className="font-medium">Check your phone</p>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              We've sent an M-Pesa prompt to <span className="font-medium text-foreground">{phone.trim()}</span>.
+              Enter your PIN to complete the payment.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -46,6 +86,13 @@ export default function BuyTokens() {
           Posting a task uses 1 token. A token is only spent from your balance once someone accepts your offer.
         </p>
       </div>
+
+      {status === "failed" && (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>The payment wasn't completed. You can try again below.</p>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -85,12 +132,8 @@ export default function BuyTokens() {
             />
           </div>
 
-          <Button
-            className="w-full"
-            disabled={!selectedPackId || !phone.trim() || initiatePurchase.isPending}
-            onClick={handleBuy}
-          >
-            {initiatePurchase.isPending ? "Processing…" : "Pay with M-Pesa"}
+          <Button className="w-full" disabled={!selectedPackId || !phone.trim()} onClick={handleBuy}>
+            {selectedPack ? `Pay ${formatMoney(selectedPack.amountKes)} with M-Pesa` : "Pay with M-Pesa"}
           </Button>
         </CardContent>
       </Card>
