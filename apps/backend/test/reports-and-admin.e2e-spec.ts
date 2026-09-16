@@ -1,7 +1,7 @@
 import { INestApplication } from "@nestjs/common";
 import * as request from "supertest";
 import { PrismaClient } from "@prisma/client";
-import { createTestApp, cleanDatabase, verifyUserKyc } from "./test-utils";
+import { createTestApp, cleanDatabase, verifyUserKyc, nextTestPhone } from "./test-utils";
 
 describe("Reports and admin (e2e)", () => {
   let app: INestApplication;
@@ -23,7 +23,7 @@ describe("Reports and admin (e2e)", () => {
   async function register(email: string) {
     const res = await request(app.getHttpServer())
       .post("/auth/register")
-      .send({ email, password: "password123", name: email, acceptedTerms: true, termsVersion: "v1" })
+      .send({ email, password: "password123", name: email, phone: nextTestPhone(), acceptedTerms: true, termsVersion: "v1" })
       .expect(201);
     return { accessToken: res.body.accessToken as string, userId: res.body.user.id as string };
   }

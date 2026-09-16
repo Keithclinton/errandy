@@ -17,6 +17,11 @@ export class RegisterDto {
   name: string;
 
   @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  phone: string;
+
+  @ApiProperty()
   @IsBoolean()
   acceptedTerms: boolean;
 

@@ -1,7 +1,7 @@
 import { INestApplication } from "@nestjs/common";
 import * as request from "supertest";
 import { PrismaClient } from "@prisma/client";
-import { createTestApp, cleanDatabase, verifyUserKyc } from "./test-utils";
+import { createTestApp, cleanDatabase, verifyUserKyc, nextTestPhone } from "./test-utils";
 
 describe("Tokens (e2e)", () => {
   let app: INestApplication;
@@ -23,7 +23,7 @@ describe("Tokens (e2e)", () => {
   async function register(email: string) {
     const res = await request(app.getHttpServer())
       .post("/auth/register")
-      .send({ email, password: "password123", name: email, acceptedTerms: true, termsVersion: "v1" })
+      .send({ email, password: "password123", name: email, phone: nextTestPhone(), acceptedTerms: true, termsVersion: "v1" })
       .expect(201);
     return { accessToken: res.body.accessToken as string, userId: res.body.user.id as string };
   }
@@ -35,7 +35,7 @@ describe("Tokens (e2e)", () => {
       .send({ title, description: "Pick up groceries today", category: "Errands", location: "Nairobi" });
   }
 
-  it("grants exactly 2 tokens on verification, once", async () => {
+  it("grants exactly 3 tokens on verification, once", async () => {
     const owner = await register("owner@test.com");
 
     const before = await prisma.user.findUniqueOrThrow({ where: { id: owner.userId } });
@@ -47,19 +47,25 @@ describe("Tokens (e2e)", () => {
       .get("/tokens/balance")
       .set("Authorization", `Bearer ${owner.accessToken}`)
       .expect(200);
-    expect(balanceRes.body.balance).toBe(2);
+    expect(balanceRes.body.balance).toBe(3);
 
     const ledger = await prisma.tokenTransaction.findMany({ where: { userId: owner.userId } });
     expect(ledger).toHaveLength(1);
     expect(ledger[0].type).toBe("signup_grant");
-    expect(ledger[0].amount).toBe(2);
+    expect(ledger[0].amount).toBe(3);
 
     // Re-verifying (e.g. switching phone numbers) must not grant tokens again. Clear the
     // prior OTP row directly so the resend cooldown doesn't block this second attempt.
     await prisma.phoneOtp.deleteMany({ where: { userId: owner.userId } });
+    const secondPhone = nextTestPhone();
+    await request(app.getHttpServer())
+      .post("/kyc/phone/request-otp")
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .send({ phone: secondPhone })
+      .expect(201);
     await verifyUserKyc(app, owner.accessToken);
     const after = await prisma.user.findUniqueOrThrow({ where: { id: owner.userId } });
-    expect(after.tokenBalance).toBe(2);
+    expect(after.tokenBalance).toBe(3);
     const ledgerAfter = await prisma.tokenTransaction.findMany({ where: { userId: owner.userId, type: "signup_grant" } });
     expect(ledgerAfter).toHaveLength(1);
   });
@@ -70,21 +76,25 @@ describe("Tokens (e2e)", () => {
 
     await createListing(owner.accessToken, "Task 1").expect(201);
     let balance = await prisma.user.findUniqueOrThrow({ where: { id: owner.userId } });
-    expect(balance.tokenBalance).toBe(1);
+    expect(balance.tokenBalance).toBe(2);
 
     await createListing(owner.accessToken, "Task 2").expect(201);
+    balance = await prisma.user.findUniqueOrThrow({ where: { id: owner.userId } });
+    expect(balance.tokenBalance).toBe(1);
+
+    await createListing(owner.accessToken, "Task 3").expect(201);
     balance = await prisma.user.findUniqueOrThrow({ where: { id: owner.userId } });
     expect(balance.tokenBalance).toBe(0);
 
     const before = await prisma.listing.count();
-    await createListing(owner.accessToken, "Task 3").expect(409);
+    await createListing(owner.accessToken, "Task 4").expect(409);
     const after = await prisma.listing.count();
     expect(after).toBe(before);
 
     const ledger = await prisma.tokenTransaction.findMany({
       where: { userId: owner.userId, type: "listing_post" },
     });
-    expect(ledger).toHaveLength(2);
+    expect(ledger).toHaveLength(3);
     expect(ledger[0].amount).toBe(-1);
   });
 
@@ -111,7 +121,7 @@ describe("Tokens (e2e)", () => {
       .expect(200);
 
     const bidderBalance = await prisma.user.findUniqueOrThrow({ where: { id: bidder.userId } });
-    expect(bidderBalance.tokenBalance).toBe(1); // 2 free - 1 debited on accept
+    expect(bidderBalance.tokenBalance).toBe(2); // 3 free - 1 debited on accept
 
     const ownerBalanceAfter = await prisma.user.findUniqueOrThrow({ where: { id: owner.userId } });
     expect(ownerBalanceAfter.tokenBalance).toBe(ownerBalanceBefore.tokenBalance); // unaffected
@@ -128,9 +138,10 @@ describe("Tokens (e2e)", () => {
     await verifyUserKyc(app, owner.accessToken);
     await verifyUserKyc(app, bidder.accessToken);
 
-    // Drain the bidder's 2 free tokens by having them post two listings of their own.
+    // Drain the bidder's 3 free tokens by having them post three listings of their own.
     await createListing(bidder.accessToken, "Bidder's task 1").expect(201);
     await createListing(bidder.accessToken, "Bidder's task 2").expect(201);
+    await createListing(bidder.accessToken, "Bidder's task 3").expect(201);
     const drained = await prisma.user.findUniqueOrThrow({ where: { id: bidder.userId } });
     expect(drained.tokenBalance).toBe(0);
 
@@ -178,7 +189,7 @@ describe("Tokens (e2e)", () => {
       .send({ packId: pack.id, phone: "0712345678" })
       .expect(201);
     expect(purchaseRes.body.status).toBe("completed");
-    expect(purchaseRes.body.balance).toBe(2 + pack.tokens);
+    expect(purchaseRes.body.balance).toBe(3 + pack.tokens);
 
     const purchase = await prisma.tokenPurchase.findUniqueOrThrow({ where: { id: purchaseRes.body.purchaseId } });
     expect(purchase.simulated).toBe(true);

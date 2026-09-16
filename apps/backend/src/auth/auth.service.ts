@@ -11,10 +11,12 @@ import { createHash, randomUUID } from "crypto";
 import { Profile } from "passport-google-oauth20";
 import { PrismaService } from "../prisma/prisma.service";
 import { EmailService } from "../email/email.service";
+import { KycService } from "../kyc/kyc.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { UserStatus } from "@prisma/client";
 import { AuthUser } from "../common/decorators/current-user.decorator";
+import { normalizeKenyanPhone } from "../common/phone";
 
 export interface TokenPair {
   accessToken: string;
@@ -30,6 +32,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly emailService: EmailService,
+    private readonly kycService: KycService,
   ) {}
 
   private hash(value: string): string {
@@ -81,6 +84,11 @@ export class AuthService {
     if (existing) {
       throw new ConflictException("An account with this email already exists");
     }
+    const phone = normalizeKenyanPhone(dto.phone);
+    const phoneTaken = await this.prisma.user.findUnique({ where: { phone } });
+    if (phoneTaken) {
+      throw new ConflictException("This phone number is already linked to another account");
+    }
     const passwordHash = await argon2.hash(dto.password);
     const user = await this.prisma.user.create({
       data: {
@@ -91,6 +99,14 @@ export class AuthService {
         termsVersion: dto.termsVersion,
       },
     });
+    // Kicks off the OTP immediately so verification happens as part of signup, not a
+    // deferred step later. If sending it fails (e.g. a transient SMS provider error), the
+    // account still exists and the frontend's code-entry screen lets them hit "resend".
+    try {
+      await this.kycService.requestOtp(user.id, phone);
+    } catch {
+      // swallow — see comment above
+    }
     const authUser = this.toAuthUser(user);
     const tokens = await this.issueTokens(authUser);
     return { ...tokens, user: authUser };

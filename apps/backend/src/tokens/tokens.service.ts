@@ -9,7 +9,7 @@ import { InitiatePurchaseDto } from "./dto/initiate-purchase.dto";
 import { normalizeKenyanPhone } from "../common/phone";
 import { EVENTS, TokensPurchasedEvent } from "../common/events/domain-events";
 
-const SIGNUP_BONUS_TOKENS = 2;
+const SIGNUP_BONUS_TOKENS = 3;
 
 interface LedgerParams {
   userId: string;

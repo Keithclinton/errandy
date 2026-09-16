@@ -7,6 +7,7 @@ interface RegisterInput {
   email: string;
   password: string;
   name: string;
+  phone: string;
   acceptedTerms: boolean;
   termsVersion: string;
 }

@@ -1,7 +1,7 @@
 import { INestApplication } from "@nestjs/common";
 import * as request from "supertest";
 import { PrismaClient } from "@prisma/client";
-import { createTestApp, cleanDatabase, verifyUserKyc } from "./test-utils";
+import { createTestApp, cleanDatabase, verifyUserKyc, nextTestPhone } from "./test-utils";
 
 describe("Errand lifecycle (e2e)", () => {
   let app: INestApplication;
@@ -23,7 +23,7 @@ describe("Errand lifecycle (e2e)", () => {
   async function registerVerified(email: string) {
     const res = await request(app.getHttpServer())
       .post("/auth/register")
-      .send({ email, password: "password123", name: email, acceptedTerms: true, termsVersion: "v1" })
+      .send({ email, password: "password123", name: email, phone: nextTestPhone(), acceptedTerms: true, termsVersion: "v1" })
       .expect(201);
     const accessToken = res.body.accessToken as string;
     const userId = res.body.user.id as string;
@@ -169,9 +169,15 @@ describe("Errand lifecycle (e2e)", () => {
     const bidderProfile = await request(app.getHttpServer()).get(`/users/${bidder.userId}`).expect(200);
     expect(bidderProfile.body.ratingAvg).toBe(5);
     expect(bidderProfile.body.ratingCount).toBe(1);
+    expect(bidderProfile.body.tasksCompleted).toBe(1);
 
     const ownerProfile = await request(app.getHttpServer()).get(`/users/${owner.userId}`).expect(200);
     expect(ownerProfile.body.ratingAvg).toBe(4);
     expect(ownerProfile.body.ratingCount).toBe(1);
+    // tasksCompleted only counts completed jobs this user won as the bidder, not ones they posted.
+    expect(ownerProfile.body.tasksCompleted).toBe(0);
+
+    const otherBidderProfile = await request(app.getHttpServer()).get(`/users/${otherBidder.userId}`).expect(200);
+    expect(otherBidderProfile.body.tasksCompleted).toBe(0);
   });
 });
