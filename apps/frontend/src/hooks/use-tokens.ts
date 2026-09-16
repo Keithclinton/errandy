@@ -9,6 +9,9 @@ export function useTokenBalance() {
     queryKey: ["tokens", "balance"],
     queryFn: () => apiFetch<{ balance: number }>("/tokens/balance"),
     enabled: !!user,
+    // Balance can change from someone else's action (e.g. a bidder is debited when their
+    // offer is accepted by the poster) — poll so that side sees it without a manual refresh.
+    refetchInterval: 15_000,
   });
 }
 

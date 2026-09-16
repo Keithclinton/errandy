@@ -80,9 +80,15 @@ export class ChatService {
       },
       orderBy: { createdAt: "asc" },
     });
-    // Viewing the thread is what "reads" it — mark the counterpart's messages as seen.
+    // Viewing the thread is what "reads" it — mark the counterpart's messages as seen,
+    // and clear any "new message" bell notifications for this conversation too, so opening
+    // the chat is enough to dismiss them without a separate trip to the notifications page.
     await this.prisma.message.updateMany({
       where: { conversationId, senderId: { not: userId }, readAt: null },
+      data: { readAt: new Date() },
+    });
+    await this.prisma.notification.updateMany({
+      where: { userId, type: "new_message", entityType: "conversation", entityId: conversationId, readAt: null },
       data: { readAt: new Date() },
     });
     return messages;

@@ -44,6 +44,7 @@ export function useCreateListing() {
     mutationFn: (input: CreateListingInput) => apiFetch<Listing>("/listings", { method: "POST", body: input }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["listings"] });
+      queryClient.invalidateQueries({ queryKey: ["tokens"] }); // posting debits 1 token
     },
   });
 }
