@@ -17,7 +17,8 @@ import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import heroIllustration from "@/assets/hero-illustration.jpg";
+import heroIllustration from "@/assets/hero-illustration.webp";
+import logoIcon from "@/assets/logo-icon.png";
 
 const valueProps = [
   { icon: Clock, title: "Save Time", body: "Let someone else handle it." },
@@ -116,7 +117,7 @@ export default function Landing() {
           <img
             src={heroIllustration}
             alt="Person browsing tasks on their phone, surrounded by example task offers"
-            className="mx-auto hidden w-full max-w-2xl drop-shadow-xl sm:block"
+            className="mx-auto hidden w-full max-w-2xl sm:block"
           />
         </div>
       </section>
@@ -204,9 +205,7 @@ export default function Landing() {
 
       <footer className="rounded-xl space-y-6 bg-primary px-6 py-10 text-center text-sm text-primary-foreground/70">
         <Link to="/" className="inline-flex items-center gap-2 text-base font-semibold text-primary-foreground">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-highlight text-sm text-highlight-foreground">
-            E
-          </span>
+          <img src={logoIcon} alt="" className="h-7 w-7" />
           Errandspot
         </Link>
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">

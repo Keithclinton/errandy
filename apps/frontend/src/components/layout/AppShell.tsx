@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { TokenBalanceBadge } from "@/components/tokens/TokenBalanceBadge";
 import { cn } from "@/lib/utils";
+import logoIcon from "@/assets/logo-icon.png";
 
 const mobileNavItems = [
   { to: "/browse", label: "Home", icon: Home, end: true },
@@ -46,9 +47,7 @@ export function AppShell() {
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="container flex h-14 items-center justify-between">
           <Link to={user ? "/browse" : "/"} className="flex items-center gap-2 font-semibold text-primary">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground">
-              E
-            </span>
+            <img src={logoIcon} alt="" className="h-7 w-7" />
             Errandspot
           </Link>
           <div className="flex items-center gap-1">
