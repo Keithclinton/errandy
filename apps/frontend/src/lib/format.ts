@@ -62,3 +62,10 @@ export function initials(name: string): string {
     .join("")
     .toUpperCase();
 }
+
+/** Hides the middle of a phone number, e.g. "0791660535" -> "0791***535". */
+export function maskPhone(phone: string): string {
+  const digits = phone.replace(/\s+/g, "");
+  if (digits.length <= 7) return digits;
+  return `${digits.slice(0, 4)}***${digits.slice(-3)}`;
+}

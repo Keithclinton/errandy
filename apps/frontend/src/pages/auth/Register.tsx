@@ -10,6 +10,7 @@ import { useRequestOtp, useVerifyOtp } from "@/hooks/use-kyc";
 import { ApiError } from "@/lib/api-client";
 import { TERMS_VERSION } from "@/lib/constants";
 import { peekResumePath, clearResumePath } from "@/lib/auth-resume";
+import { maskPhone } from "@/lib/format";
 import { AuthLayout } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,7 @@ export default function Register() {
       <AuthLayout title="Verify your phone" description="One last step — confirm it's really you.">
         <form onSubmit={handleVerifyCode} className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Enter the 6-digit code we sent to <span className="font-medium text-foreground">{phone}</span>.
+            Enter the 6-digit code we sent to <span className="font-medium text-foreground">{maskPhone(phone)}</span>.
           </p>
           <div className="space-y-2">
             <Label htmlFor="code">Verification code</Label>

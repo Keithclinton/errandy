@@ -6,6 +6,7 @@ import { useKycStatus, useRequestOtp, useVerifyOtp } from "@/hooks/use-kyc";
 import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/api-client";
 import { peekResumePath, clearResumePath } from "@/lib/auth-resume";
+import { maskPhone } from "@/lib/format";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,7 +127,7 @@ export default function Verify() {
           {(status === "none" || status === "rejected") && step === "code" && (
             <form onSubmit={handleVerifyCode} className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Enter the 6-digit code we sent to <span className="font-medium text-foreground">{phone}</span>.
+                Enter the 6-digit code we sent to <span className="font-medium text-foreground">{maskPhone(phone)}</span>.
               </p>
               <div className="space-y-2">
                 <Label htmlFor="code">Verification code</Label>

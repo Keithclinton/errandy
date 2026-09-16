@@ -99,7 +99,7 @@ export function ListingForm({
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="budget">Budget in KES (optional)</Label>
+        <Label htmlFor="budget">Budget in KES</Label>
         <Input id="budget" type="number" step="1" min="0" {...register("budget")} />
       </div>
       <div className="space-y-2">
