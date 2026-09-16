@@ -187,9 +187,10 @@ export class ChatService {
     if (!(await this.isWinningConversation(conversation))) {
       throw new BadRequestException("Contact details can only be shared once this offer has been accepted");
     }
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    const contact = user?.phone ?? user?.email;
-    const message = await this.sendMessage(conversationId, userId, `📞 Contact shared: ${contact}`);
+    // Reaching a winning conversation requires both parties to already be phone-verified
+    // (VerifiedGuard on posting/bidding), which always sets `phone` — so it's guaranteed here.
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const message = await this.sendMessage(conversationId, userId, `📞 Contact shared: ${user.phone}`);
     await this.events.emitAsync(EVENTS.CONTACT_SHARED, {
       conversationId,
       listingId: conversation.listingId,
