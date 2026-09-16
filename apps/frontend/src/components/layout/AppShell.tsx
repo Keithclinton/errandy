@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { PageLoader } from "@/components/layout/PageLoader";
 import { Home, PlusCircle, ListChecks, MessageCircle, LogOut, ShieldCheck, LayoutDashboard, Menu, UserCog } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
@@ -152,7 +153,9 @@ export function AppShell() {
       </header>
 
       <main className="container flex-1 py-6 pb-20 md:pb-6">
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </main>
 
       {user && (

@@ -1,40 +1,43 @@
+import { lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AdminRoute } from "@/components/layout/AdminRoute";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 
-import Landing from "@/pages/Landing";
-import Feed from "@/pages/Feed";
-import ListingDetail from "@/pages/ListingDetail";
-import CreateListing from "@/pages/CreateListing";
-import EditListing from "@/pages/EditListing";
-import MyActivity from "@/pages/MyActivity";
-import Verify from "@/pages/Verify";
-import Profile from "@/pages/Profile";
-import EditProfile from "@/pages/EditProfile";
-import Notifications from "@/pages/Notifications";
-import BuyTokens from "@/pages/tokens/BuyTokens";
-import Terms from "@/pages/Terms";
-import Privacy from "@/pages/Privacy";
-import Safety from "@/pages/Safety";
-import About from "@/pages/About";
-import HelpCenter from "@/pages/HelpCenter";
-import NotFound from "@/pages/NotFound";
+// Lazy-loaded so a visitor only downloads the code for the page they're actually on —
+// without this, every route (including the whole admin panel) shipped in one ~1.1MB bundle.
+const Landing = lazy(() => import("@/pages/Landing"));
+const Feed = lazy(() => import("@/pages/Feed"));
+const ListingDetail = lazy(() => import("@/pages/ListingDetail"));
+const CreateListing = lazy(() => import("@/pages/CreateListing"));
+const EditListing = lazy(() => import("@/pages/EditListing"));
+const MyActivity = lazy(() => import("@/pages/MyActivity"));
+const Verify = lazy(() => import("@/pages/Verify"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const EditProfile = lazy(() => import("@/pages/EditProfile"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
+const BuyTokens = lazy(() => import("@/pages/tokens/BuyTokens"));
+const Terms = lazy(() => import("@/pages/Terms"));
+const Privacy = lazy(() => import("@/pages/Privacy"));
+const Safety = lazy(() => import("@/pages/Safety"));
+const About = lazy(() => import("@/pages/About"));
+const HelpCenter = lazy(() => import("@/pages/HelpCenter"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
-import Login from "@/pages/auth/Login";
-import Register from "@/pages/auth/Register";
-import ForgotPassword from "@/pages/auth/ForgotPassword";
-import ResetPassword from "@/pages/auth/ResetPassword";
-import GoogleCallback from "@/pages/auth/GoogleCallback";
+const Login = lazy(() => import("@/pages/auth/Login"));
+const Register = lazy(() => import("@/pages/auth/Register"));
+const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
+const GoogleCallback = lazy(() => import("@/pages/auth/GoogleCallback"));
 
-import ConversationsList from "@/pages/chat/ConversationsList";
-import Thread from "@/pages/chat/Thread";
+const ConversationsList = lazy(() => import("@/pages/chat/ConversationsList"));
+const Thread = lazy(() => import("@/pages/chat/Thread"));
 
-import AdminUsers from "@/pages/admin/Users";
-import AdminUserDetail from "@/pages/admin/UserDetail";
-import AdminReports from "@/pages/admin/Reports";
-import AdminAnalytics from "@/pages/admin/Analytics";
+const AdminUsers = lazy(() => import("@/pages/admin/Users"));
+const AdminUserDetail = lazy(() => import("@/pages/admin/UserDetail"));
+const AdminReports = lazy(() => import("@/pages/admin/Reports"));
+const AdminAnalytics = lazy(() => import("@/pages/admin/Analytics"));
 
 export default function App() {
   return (
