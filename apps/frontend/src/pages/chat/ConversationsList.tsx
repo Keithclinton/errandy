@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useConversations } from "@/hooks/use-chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,19 +8,13 @@ import { initials, formatRelativeTime } from "@/lib/format";
 
 export default function ConversationsList() {
   const { data, isLoading } = useConversations();
-  const navigate = useNavigate();
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="text-muted-foreground hover:text-foreground"
-          aria-label="Go back"
-        >
+        <Link to="/browse" className="text-muted-foreground hover:text-foreground" aria-label="Back to browse">
           <ArrowLeft className="h-5 w-5" />
-        </button>
+        </Link>
         <h1 className="text-2xl font-semibold">Chat</h1>
       </div>
 
