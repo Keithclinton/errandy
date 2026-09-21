@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
@@ -25,6 +25,11 @@ export class UsersController {
   @Post("me/upload-url")
   requestUploadUrl(@CurrentUser() user: AuthUser, @Body() dto: RequestUploadUrlDto) {
     return this.usersService.requestUploadUrl(user.id, dto);
+  }
+
+  @Delete("me")
+  deleteMe(@CurrentUser() user: AuthUser) {
+    return this.usersService.deleteAccount(user.id);
   }
 
   @Public()

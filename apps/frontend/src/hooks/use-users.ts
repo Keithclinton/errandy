@@ -20,3 +20,10 @@ export function useUpdateProfile() {
     },
   });
 }
+
+/** Permanently deletes the current user's own account. Irreversible. */
+export function useDeleteAccount() {
+  return useMutation({
+    mutationFn: () => apiFetch("/users/me", { method: "DELETE" }),
+  });
+}

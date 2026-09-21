@@ -6,6 +6,7 @@ import { useUpdateProfile } from "@/hooks/use-users";
 import { ApiError } from "@/lib/api-client";
 import { ImageUploader } from "@/components/listings/ImageUploader";
 import { AvatarUploader } from "@/components/users/AvatarUploader";
+import { DeleteAccountDialog } from "@/components/users/DeleteAccountDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -102,6 +103,14 @@ export default function EditProfile() {
           {isSubmitting ? "Saving…" : "Save changes"}
         </Button>
       </form>
+
+      <div className="space-y-2 rounded-lg border border-destructive/30 p-4">
+        <h2 className="font-medium">Danger zone</h2>
+        <p className="text-sm text-muted-foreground">
+          Permanently delete your account and everything tied to it. This can't be undone.
+        </p>
+        <DeleteAccountDialog />
+      </div>
     </div>
   );
 }
