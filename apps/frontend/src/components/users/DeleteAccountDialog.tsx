@@ -49,7 +49,7 @@ export function DeleteAccountDialog() {
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            This permanently deletes your account and every listing, offer, chat, and rating tied to it —
+            This permanently deletes your account and every listing, offer, chat, and rating tied to it,
             including listings other people bid on. This cannot be undone.
           </p>
           <div className="space-y-2">

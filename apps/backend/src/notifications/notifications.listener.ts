@@ -74,7 +74,7 @@ export class NotificationsListener {
           userId,
           type: NotificationType.please_rate,
           title: "Rate your errand partner",
-          body: "The errand is marked completed — leave a rating.",
+          body: "The errand is marked completed. Leave a rating.",
           entityType: "listing",
           entityId: event.listingId,
         }),

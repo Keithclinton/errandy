@@ -81,7 +81,7 @@ export default function Register() {
 
   if (step === "code") {
     return (
-      <AuthLayout title="Verify your phone" description="One last step — confirm it's really you.">
+      <AuthLayout title="Verify your phone" description="One last step: confirm it's really you.">
         <form onSubmit={handleVerifyCode} className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Enter the 6-digit code we sent to <span className="font-medium text-foreground">{maskPhone(phone)}</span>.

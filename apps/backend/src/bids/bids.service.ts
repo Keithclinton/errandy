@@ -131,7 +131,7 @@ export class BidsService {
           amount: bid.amount.toString(),
         } satisfies BidTokenRequiredEvent);
         throw new ConflictException({
-          message: "This bidder doesn't have enough tokens yet — we've notified them. Try accepting again once they buy one.",
+          message: "This bidder doesn't have enough tokens yet. We've notified them. Try accepting again once they buy one.",
           code: "BIDDER_INSUFFICIENT_TOKENS",
         });
       }

@@ -46,7 +46,7 @@ export function DeleteUserDialog({ userId, email }: { userId: string; email: str
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
             This permanently deletes <span className="font-medium text-foreground">{email}</span> and every
-            listing, offer, chat, and rating tied to them — including listings other people bid on. This
+            listing, offer, chat, and rating tied to them, including listings other people bid on. This
             cannot be undone.
           </p>
           <div className="space-y-2">

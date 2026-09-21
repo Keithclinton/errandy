@@ -60,10 +60,10 @@ export class KycService {
       orderBy: { createdAt: "desc" },
     });
     if (!otp || otp.expiresAt < new Date()) {
-      throw new BadRequestException("That code has expired — request a new one");
+      throw new BadRequestException("That code has expired. Request a new one");
     }
     if (otp.attempts >= MAX_OTP_ATTEMPTS) {
-      throw new BadRequestException("Too many incorrect attempts — request a new code");
+      throw new BadRequestException("Too many incorrect attempts. Request a new code");
     }
     if (otp.codeHash !== this.hash(code)) {
       await this.prisma.phoneOtp.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
