@@ -37,7 +37,7 @@ export default function Privacy() {
       </ul>
       <p className="text-sm">
         Errandspot doesn't process, and never receives, any payment made between a task poster and a provider for
-        the task itself — see our Terms of Service for how that payment works.
+        the task itself; see our Terms of Service for how that payment works.
       </p>
 
       <h2 className="text-lg font-medium">2. How we use it</h2>
@@ -50,7 +50,7 @@ export default function Privacy() {
 
       <h2 className="text-lg font-medium">3. Who we share it with</h2>
       <p className="text-sm">
-        Other users see what's needed to use the Service as intended — for example, a provider sees the task
+        Other users see what's needed to use the Service as intended: for example, a provider sees the task
         poster's name and rating, and vice versa, once they're in contact. We share data with service providers
         who help us run Errandspot, such as our hosting provider, our SMS-delivery provider, and the licensed
         payment provider that processes Errandspot's platform fees, only to the extent needed for them to

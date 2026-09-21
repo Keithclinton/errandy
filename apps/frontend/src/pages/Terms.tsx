@@ -13,7 +13,7 @@ export default function Terms() {
       <p className="text-sm">
         Errandspot is a marketplace where users post tasks and other users make offers to complete them.
         Errandspot is not a party to any agreement formed between a task poster and a provider, does not
-        supervise or guarantee the performance of any task, and does not process payment for tasks — payment is
+        supervise or guarantee the performance of any task, and does not process payment for tasks. Payment is
         arranged directly between users. Errandspot's role is limited to providing the platform through which
         users find each other, communicate, verify their identity, and rate one another.
       </p>
@@ -38,7 +38,7 @@ export default function Terms() {
       <p className="text-sm">
         A task poster describes the work they need done, including any budget or timeline. Providers respond
         with offers. No agreement is formed until the task poster and a provider confirm, through Errandspot's
-        chat, that they've agreed on scope, price, and timing — at that point the arrangement is between those
+        chat, that they've agreed on scope, price, and timing. At that point the arrangement is between those
         two users, not with Errandspot. Both users are responsible for making sure the agreed details are clear
         before work begins.
       </p>
@@ -46,11 +46,11 @@ export default function Terms() {
       <h2 className="text-lg font-medium">5. Fees</h2>
       <p className="text-sm">
         Errandspot charges a flat fee to post a task and a flat fee to accept a task. The amount is shown to
-        you, and is payable, before you post or accept — consistent with the fee-disclosure obligations of the
+        you, and is payable, before you post or accept, consistent with the fee-disclosure obligations of the
         Consumer Protection Act, 2012. These fees are for the use of the Errandspot platform itself; they are
         separate from, and don't include, whatever the task poster and provider agree to pay each other for the
         work described in Section 6. Fees are processed for us by a licensed third-party payment provider and
-        are non-refundable once charged — including where a posted task receives no offers, or an accepted task
+        are non-refundable once charged, including where a posted task receives no offers, or an accepted task
         doesn't go on to be completed. If we change our fee amounts, the new amount applies only to tasks posted
         or accepted after the change, never to fees already charged.
       </p>
@@ -58,7 +58,7 @@ export default function Terms() {
       <h2 className="text-lg font-medium">6. Payments between users</h2>
       <p className="text-sm">
         The fees in Section 5 are the only payments Errandspot itself charges or processes. Errandspot does not
-        process, hold, or guarantee any payment for the task itself — that payment is arranged and made directly
+        process, hold, or guarantee any payment for the task itself. That payment is arranged and made directly
         between the task poster and the provider, on whatever terms and by whatever method they agree.
         Errandspot is not responsible for a task payment that is late, disputed, or never made, and doesn't
         mediate payment disputes beyond the reporting process described in Section 10.
@@ -100,8 +100,8 @@ export default function Terms() {
       <h2 className="text-lg font-medium">9. Content you post</h2>
       <p className="text-sm">
         You keep ownership of the task descriptions, messages, and other content you post. By posting it, you
-        grant Errandspot a license to display, store, and transmit it as needed to operate the Service — for
-        example, showing your task to prospective providers, or your messages to the person you're chatting
+        grant Errandspot a license to display, store, and transmit it as needed to operate the Service, for
+        example showing your task to prospective providers, or your messages to the person you're chatting
         with.
       </p>
 
