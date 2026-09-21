@@ -34,7 +34,7 @@ const steps = [
 ];
 
 const trustItems = [
-  { icon: ShieldCheck, title: "Verified Users", body: "Real people, verified for safety." },
+  { icon: ShieldCheck, title: "Real People", body: "Real people, real tasks." },
   { icon: MapPin, title: "Built for Local", body: "People nearby. Faster help." },
   { icon: Star, title: "Rated & Reviewed", body: "Real ratings. Make better choices." },
   { icon: LayoutGrid, title: "Variety of Tasks", body: "Errands, labour, skills & more." },
