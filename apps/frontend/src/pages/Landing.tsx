@@ -175,7 +175,7 @@ export default function Landing() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {trustItems.map((item) => (
             <div key={item.title} className="flex items-start gap-3">
-              <item.icon className="h-8 w-8 shrink-0 text-[#68c540]" />
+              <item.icon className="h-8 w-8 shrink-0 text-highlight" />
               <div>
                 <h3 className="font-medium">{item.title}</h3>
                 <p className="mt-1 text-sm text-primary-foreground/70">{item.body}</p>

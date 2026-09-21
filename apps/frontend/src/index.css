@@ -26,8 +26,8 @@
     --accent: 241 45% 95%;
     --accent-foreground: 241 60% 28%;
 
-    /* Lime highlight — used sparingly for standout CTAs and brand accents. */
-    --highlight: 71 92% 41%;
+    /* Logo green — used sparingly for standout CTAs and brand accents. */
+    --highlight: 102 53% 51%;
     --highlight-foreground: 241 76% 24%;
 
     --destructive: 0 84% 60%;
