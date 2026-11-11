@@ -1,27 +1,18 @@
-import { Controller, ForbiddenException, Get, Headers } from "@nestjs/common";
+import { Controller, Get, UseGuards } from "@nestjs/common";
 import { ApiExcludeController } from "@nestjs/swagger";
-import { ConfigService } from "@nestjs/config";
 import { Public } from "../common/decorators/public.decorator";
+import { CronGuard } from "../common/guards/cron.guard";
 import { EmailService } from "./email.service";
 
 @ApiExcludeController()
 @Controller("cron")
 export class EmailController {
-  constructor(
-    private readonly emailService: EmailService,
-    private readonly config: ConfigService,
-  ) {}
+  constructor(private readonly emailService: EmailService) {}
 
-  // GET + "Authorization: Bearer <CRON_SECRET>" matches Vercel Cron's actual invocation
-  // convention: it always issues a GET and attaches that header automatically when a
-  // CRON_SECRET env var is set on the project.
   @Public()
+  @UseGuards(CronGuard)
   @Get("digest")
-  async runDigest(@Headers("authorization") authorization: string | undefined) {
-    const expected = `Bearer ${this.config.get<string>("CRON_SECRET")}`;
-    if (!authorization || authorization !== expected) {
-      throw new ForbiddenException();
-    }
+  async runDigest() {
     return this.emailService.runUnreadMessagesDigest();
   }
 }
