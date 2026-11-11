@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { TokensService } from "./tokens.service";
-import { TokensController } from "./tokens.controller";
+import { PaymentsCronController, TokensController } from "./tokens.controller";
 import { PaymentsModule } from "../payments/payments.module";
 
 @Module({
   imports: [PaymentsModule],
-  controllers: [TokensController],
+  controllers: [TokensController, PaymentsCronController],
   providers: [TokensService],
   exports: [TokensService],
 })

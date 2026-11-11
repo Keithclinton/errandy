@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Coins, Check, Smartphone, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Coins, Check, Clock, Smartphone, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
-import { useInitiatePurchase, useTokenPacks, useTokenTransactions } from "@/hooks/use-tokens";
+import { useInitiatePurchase, usePurchaseStatus, useTokenPacks, useTokenTransactions } from "@/hooks/use-tokens";
 import { ApiError } from "@/lib/api-client";
 import { formatMoney, formatRelativeTime } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,42 +20,105 @@ const TRANSACTION_LABELS: Record<string, string> = {
   purchase: "Bought tokens",
 };
 
-// Even though today's payment simulates an instant success, a real M-Pesa STK push
-// takes several seconds for the customer to approve on their phone. Holding the
-// "waiting" screen for at least this long keeps the experience honest either way,
-// rather than flashing straight to a result.
+// Simulated payments (local dev) succeed instantly. Holding the "check your phone" screen
+// for at least this long keeps that close to the real experience instead of flashing past.
 const MIN_WAIT_MS = 2500;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// The M-Pesa prompt itself expires after about a minute. Past this, stop promising an
+// answer and explain that the tokens will arrive on their own if the payment went through.
+const SLOW_AFTER_MS = 90_000;
+
+// M-Pesa result codes a payer can do something about.
+const FAILURE_MESSAGES: Record<number, string> = {
+  1: "Your M-Pesa balance wasn't enough for this payment.",
+  1001: "Another M-Pesa payment was already in progress on that phone. Wait a minute and try again.",
+  1019: "The M-Pesa prompt expired before it was answered.",
+  1032: "You cancelled the M-Pesa prompt.",
+  1037: "We couldn't reach that phone. Make sure it's on and has signal, then try again.",
+  2001: "The M-Pesa PIN entered was wrong.",
+};
+const DEFAULT_FAILURE = "The payment wasn't completed. You can try again below.";
+
 export default function BuyTokens() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: packs, isLoading: packsLoading } = useTokenPacks();
   const { data: transactions } = useTokenTransactions();
   const initiatePurchase = useInitiatePurchase();
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [status, setStatus] = useState<"idle" | "waiting" | "failed">("idle");
+  const [purchaseId, setPurchaseId] = useState<string | null>(null);
+  const [slow, setSlow] = useState(false);
+  const [failureMessage, setFailureMessage] = useState(DEFAULT_FAILURE);
+
+  const { data: purchase } = usePurchaseStatus(purchaseId ?? undefined, { enabled: status === "waiting" });
 
   const selectedPack = packs?.find((p) => p.id === selectedPackId);
 
+  const succeed = () => {
+    toast.success("Tokens added to your balance!");
+    setSelectedPackId(null);
+    setPurchaseId(null);
+    setStatus("idle");
+  };
+
+  const fail = (message: string) => {
+    setFailureMessage(message);
+    setPurchaseId(null);
+    setStatus("failed");
+  };
+
+  const backToPacks = () => {
+    setPurchaseId(null);
+    setStatus("idle");
+  };
+
+  // A real payment comes back "pending" from initiate; poll until M-Pesa reports the outcome.
+  useEffect(() => {
+    if (status !== "waiting" || !purchase || purchase.id !== purchaseId) return;
+    if (purchase.status === "completed") {
+      queryClient.invalidateQueries({ queryKey: ["tokens", "balance"] });
+      queryClient.invalidateQueries({ queryKey: ["tokens", "transactions"] });
+      toast.success("Tokens added to your balance!");
+      setSelectedPackId(null);
+      setPurchaseId(null);
+      setStatus("idle");
+    } else if (purchase.status === "failed") {
+      setFailureMessage(FAILURE_MESSAGES[purchase.resultCode ?? -1] ?? DEFAULT_FAILURE);
+      setPurchaseId(null);
+      setStatus("failed");
+    }
+  }, [status, purchase, purchaseId, queryClient]);
+
+  useEffect(() => {
+    setSlow(false);
+    if (status !== "waiting" || !purchaseId) return;
+    const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [status, purchaseId]);
+
   const handleBuy = async () => {
     if (!selectedPackId || !phone.trim()) return;
+    setPurchaseId(null);
     setStatus("waiting");
     try {
       const [result] = await Promise.all([
         initiatePurchase.mutateAsync({ packId: selectedPackId, phone: phone.trim() }),
         sleep(MIN_WAIT_MS),
       ]);
-      if (result.status !== "completed") {
-        setStatus("failed");
-        return;
+      if (result.status === "completed") {
+        succeed();
+      } else {
+        setPurchaseId(result.purchaseId);
       }
-      toast.success("Tokens added to your balance!");
-      setSelectedPackId(null);
-      setStatus("idle");
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Couldn't complete that purchase.");
-      setStatus("failed");
+      if (err instanceof ApiError && err.status === 429) {
+        fail("Too many attempts. Wait a minute and try again.");
+      } else {
+        fail(err instanceof ApiError ? err.message : "Couldn't start that payment.");
+      }
     }
   };
 
@@ -63,15 +127,33 @@ export default function BuyTokens() {
       <div className="mx-auto max-w-lg">
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-            <span className="relative flex h-14 w-14 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/30" />
-              <Smartphone className="relative h-8 w-8 text-primary" />
-            </span>
-            <p className="font-medium">Check your phone</p>
-            <p className="max-w-xs text-sm text-muted-foreground">
-              We've sent an M-Pesa prompt to <span className="font-medium text-foreground">{phone.trim()}</span>.
-              Enter your PIN to complete the payment.
-            </p>
+            {slow ? (
+              <>
+                <Clock className="h-8 w-8 text-muted-foreground" />
+                <p className="font-medium">Still waiting for M-Pesa</p>
+                <p className="max-w-xs text-sm text-muted-foreground">
+                  We haven't had confirmation yet. If you entered your PIN, your tokens will be added as soon as
+                  M-Pesa confirms, and you'll get a notification.
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="relative flex h-14 w-14 items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/30" />
+                  <Smartphone className="relative h-8 w-8 text-primary" />
+                </span>
+                <p className="font-medium">Check your phone</p>
+                <p className="max-w-xs text-sm text-muted-foreground">
+                  We've sent an M-Pesa prompt to <span className="font-medium text-foreground">{phone.trim()}</span>.
+                  Enter your PIN to complete the payment.
+                </p>
+              </>
+            )}
+            {purchaseId && (
+              <Button variant={slow ? "default" : "ghost"} size="sm" className="mt-2" onClick={backToPacks}>
+                {slow ? "Done" : "Back"}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -90,7 +172,7 @@ export default function BuyTokens() {
       {status === "failed" && (
         <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>The payment wasn't completed. You can try again below.</p>
+          <p>{failureMessage}</p>
         </div>
       )}
 

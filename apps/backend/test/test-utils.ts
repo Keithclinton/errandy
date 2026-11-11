@@ -1,5 +1,5 @@
 import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { Test } from "@nestjs/testing";
+import { Test, TestingModuleBuilder } from "@nestjs/testing";
 import { json, urlencoded } from "express";
 import * as request from "supertest";
 import * as jwt from "jsonwebtoken";
@@ -15,11 +15,13 @@ export class FakeSmsService {
   }
 }
 
-export async function createTestApp(): Promise<INestApplication> {
-  const moduleFixture = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(SmsService)
-    .useClass(FakeSmsService)
-    .compile();
+/** `configure` can override more providers, e.g. swap MpesaService for a fake Daraja. */
+export async function createTestApp(
+  configure: (builder: TestingModuleBuilder) => TestingModuleBuilder = (builder) => builder,
+): Promise<INestApplication> {
+  const moduleFixture = await configure(
+    Test.createTestingModule({ imports: [AppModule] }).overrideProvider(SmsService).useClass(FakeSmsService),
+  ).compile();
   const app = moduleFixture.createNestApplication({ bodyParser: false });
   app.use(
     json({

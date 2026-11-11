@@ -194,6 +194,8 @@ model TokenPurchase {
   resultCode         Int?
   resultDesc         String?
   simulated          Boolean             @default(false)
+  // Last time we asked Daraja for this purchase's result because its callback was late.
+  lastCheckedAt      DateTime?
   createdAt          DateTime            @default(now())
   completedAt        DateTime?
 

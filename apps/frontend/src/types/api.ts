@@ -199,7 +199,11 @@ export interface TokenPurchase {
   id: string;
   tokens: number;
   amountKes: string;
+  phone: string;
   status: TokenPurchaseStatus;
+  /** M-Pesa's result code once the payment has an outcome; 0 means paid. */
+  resultCode?: number | null;
+  mpesaReceiptNumber?: string | null;
   createdAt: string;
   completedAt?: string | null;
 }
