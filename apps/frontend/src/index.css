@@ -21,7 +21,8 @@
     --secondary-foreground: 241 60% 28%;
 
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* Dark enough for 4.5:1 on every light surface it sits on, including the hero's tinted blobs. */
+    --muted-foreground: 215 16% 37%;
 
     --accent: 241 45% 95%;
     --accent-foreground: 241 60% 28%;
@@ -29,8 +30,11 @@
     /* Logo green — used sparingly for standout CTAs and brand accents. */
     --highlight: 102 53% 51%;
     --highlight-foreground: 241 76% 24%;
+    /* The logo green is too light to read as text on light backgrounds; use this shade for green text. */
+    --highlight-strong: 102 62% 30%;
 
-    --destructive: 0 84% 60%;
+    /* Dark enough for 4.5:1 both as error text on white and behind white button text. */
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 214 32% 91%;

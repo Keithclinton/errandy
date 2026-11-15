@@ -77,6 +77,7 @@ export function BidList({
                     <Button
                       size="sm"
                       variant="outline"
+                      aria-label={bid.bidder ? `Message ${bid.bidder.name}` : "Message bidder"}
                       onClick={() =>
                         openConversation.mutate({
                           listingId: (bid.listing?.id ?? listingId)!,

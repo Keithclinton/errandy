@@ -97,7 +97,7 @@ export default function Feed() {
             value={filters.sort ?? "newest"}
             onValueChange={(sort) => setFilters((f) => ({ ...f, sort: sort as Filters["sort"], page: 1 }))}
           >
-            <SelectTrigger className="h-8 w-44 text-xs">
+            <SelectTrigger className="h-8 w-44 text-xs" aria-label="Sort tasks">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -126,6 +126,7 @@ export default function Feed() {
 
         {data && data.items.length > 0 && (
           <>
+            <h2 className="sr-only">Available tasks</h2>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
               <div className="min-w-0 space-y-3">
                 {data.items.map((listing) => (

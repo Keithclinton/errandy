@@ -51,8 +51,8 @@ export default function Profile() {
         <div>
           <h2 className="mb-3 text-lg font-medium">Portfolio</h2>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {profile.portfolioUrls.map((url) => (
-              <img key={url} src={url} alt="" className="aspect-square rounded-lg object-cover" />
+            {profile.portfolioUrls.map((url, i) => (
+              <img key={url} src={url} alt={`${profile.name}'s portfolio, photo ${i + 1}`} className="aspect-square rounded-lg object-cover" />
             ))}
           </div>
         </div>

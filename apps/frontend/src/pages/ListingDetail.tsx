@@ -87,8 +87,8 @@ export default function ListingDetail() {
 
       {listing.imageUrls.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {listing.imageUrls.map((url) => (
-            <img key={url} src={url} alt="" className="aspect-square rounded-lg object-cover" />
+          {listing.imageUrls.map((url, i) => (
+            <img key={url} src={url} alt={`Photo ${i + 1} for ${listing.title}`} className="aspect-square rounded-lg object-cover" />
           ))}
         </div>
       )}

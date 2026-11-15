@@ -76,7 +76,7 @@ export default function Landing() {
         <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_1.25fr] lg:items-center">
           <div className="text-center lg:text-left">
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-              Need something done? <span className="text-highlight">Post it.</span>
+              Need something done? <span className="text-highlight-strong">Post it.</span>
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
               From everyday errands to skilled work, post what you need done and get offers from
@@ -92,7 +92,7 @@ export default function Landing() {
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">
+              <Link to="/login" className="text-primary underline underline-offset-4 hover:text-primary/80">
                 Log in
               </Link>
             </p>
@@ -123,15 +123,15 @@ export default function Landing() {
 
       {/* Value props */}
       <section>
+        <h2 className="sr-only">Why use Errandspot</h2>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {valueProps.map((prop, i) => (
-            <div
-              key={prop.title}
-              className="group flex animate-fade-up flex-col items-center text-center"
-              style={{ animationDelay: `${i * 120}ms` }}
-            >
-              <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary text-primary shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-highlight group-hover:text-highlight group-hover:shadow-md">
-                <prop.icon className="h-9 w-9" />
+            <div key={prop.title} className="group flex flex-col items-center text-center">
+              {/* Only the icon fades in: text that is mid-fade is too faint to read. */}
+              <div className="animate-fade-up motion-reduce:animate-none" style={{ animationDelay: `${i * 120}ms` }}>
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary text-primary shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-highlight group-hover:text-highlight group-hover:shadow-md">
+                  <prop.icon className="h-9 w-9" />
+                </div>
               </div>
               <h3 className="mt-3 font-medium">{prop.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{prop.body}</p>
@@ -172,6 +172,7 @@ export default function Landing() {
 
       {/* Trust banner */}
       <section className="rounded-xl bg-primary px-6 py-10 text-primary-foreground">
+        <h2 className="sr-only">Why people trust Errandspot</h2>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {trustItems.map((item) => (
             <div key={item.title} className="flex items-start gap-3">

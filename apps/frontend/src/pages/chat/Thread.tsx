@@ -64,7 +64,7 @@ export default function Thread() {
   return (
     <div className="flex h-[calc(100vh-8.5rem)] flex-col md:h-[calc(100vh-5rem)]">
       <div className="mb-3 flex items-center gap-3 border-b pb-3">
-        <Link to="/chat" className="text-muted-foreground hover:text-foreground">
+        <Link to="/chat" className="text-muted-foreground hover:text-foreground" aria-label="Back to messages">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <Avatar className="h-9 w-9">
@@ -72,7 +72,7 @@ export default function Thread() {
           <AvatarFallback>{counterpart ? initials(counterpart.name) : "?"}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium leading-tight">{counterpart?.name ?? "Chat"}</p>
+          <h1 className="truncate font-medium leading-tight">{counterpart?.name ?? "Chat"}</h1>
           {conversation?.listingTitle && (
             <p className="truncate text-xs text-muted-foreground">{conversation.listingTitle}</p>
           )}
@@ -138,6 +138,7 @@ export default function Thread() {
           <Button
             type="submit"
             size="icon"
+            aria-label="Send message"
             className="shrink-0 rounded-full"
             disabled={sendMessage.isPending || !body.trim()}
           >

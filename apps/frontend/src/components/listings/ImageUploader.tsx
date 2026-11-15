@@ -47,11 +47,12 @@ export function ImageUploader({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
-        {value.map((url) => (
+        {value.map((url, i) => (
           <div key={url} className="relative h-20 w-20">
-            <img src={url} alt="" className="h-full w-full rounded-md object-cover" />
+            <img src={url} alt={`Photo ${i + 1}`} className="h-full w-full rounded-md object-cover" />
             <button
               type="button"
+              aria-label={`Remove photo ${i + 1}`}
               onClick={() => onChange(value.filter((u) => u !== url))}
               className="absolute -right-1.5 -top-1.5 rounded-full bg-destructive p-0.5 text-destructive-foreground"
             >

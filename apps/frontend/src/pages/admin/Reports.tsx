@@ -29,7 +29,7 @@ export default function AdminReports() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Reports</h1>
         <Select value={status} onValueChange={(v) => setStatus(v as ReportStatus | "all")}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40" aria-label="Filter reports by status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

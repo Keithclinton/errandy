@@ -124,7 +124,7 @@ export default function Register() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="text-primary hover:underline">
+          <Link to="/login" className="text-primary underline underline-offset-4 hover:text-primary/80">
             Log in
           </Link>
         </>
@@ -171,11 +171,11 @@ export default function Register() {
           />
           <Label htmlFor="acceptedTerms" className="text-sm font-normal leading-snug">
             I agree to the{" "}
-            <Link to="/terms" className="text-primary hover:underline" target="_blank">
+            <Link to="/terms" className="text-primary underline underline-offset-4 hover:text-primary/80" target="_blank">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+            <Link to="/privacy" className="text-primary underline underline-offset-4 hover:text-primary/80" target="_blank">
               Privacy Policy
             </Link>
           </Label>

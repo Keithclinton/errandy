@@ -36,11 +36,14 @@ export default function MyActivity() {
             <p className="py-8 text-center text-sm text-muted-foreground">You haven't posted any tasks yet.</p>
           )}
           {myListings.data && myListings.data.items.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {myListings.data.items.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
+            <>
+              <h2 className="sr-only">My tasks</h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {myListings.data.items.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
 

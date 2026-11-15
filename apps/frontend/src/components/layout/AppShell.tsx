@@ -94,7 +94,7 @@ export function AppShell() {
                 <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
+                    <Button variant="ghost" size="icon" className="rounded-full" aria-label="Account menu">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={user.avatarUrl ?? undefined} alt={user.name} />
                         <AvatarFallback>{initials}</AvatarFallback>

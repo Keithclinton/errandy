@@ -41,6 +41,7 @@ export function AvatarUploader({
     <div className="flex items-center gap-4">
       <button
         type="button"
+        aria-label="Change profile photo"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
         className="group relative h-20 w-20 shrink-0 rounded-full disabled:opacity-60"

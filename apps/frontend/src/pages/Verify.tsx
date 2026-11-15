@@ -55,7 +55,7 @@ export default function Verify() {
       <Card>
         <CardHeader className="items-center text-center">
           <ShieldCheck className="mb-2 h-10 w-10 text-primary" />
-          <CardTitle>Identity verification</CardTitle>
+          <CardTitle as="h1">Identity verification</CardTitle>
           <CardDescription>
             A quick phone number check keeps everyone on Errandspot accountable.
           </CardDescription>

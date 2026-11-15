@@ -56,7 +56,9 @@ export default function AdminUsers() {
                 <TableHead>KYC</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Rating</TableHead>
-                <TableHead />
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

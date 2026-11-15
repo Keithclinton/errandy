@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 import { Flag } from "lucide-react";
 import { useCreateReport } from "@/hooks/use-reports";
@@ -47,6 +47,8 @@ export function ReportDialog({
   const [reason, setReason] = useState<ReportReason | "">("");
   const [details, setDetails] = useState("");
   const createReport = useCreateReport();
+  const reasonId = useId();
+  const detailsId = useId();
 
   const onSubmit = async () => {
     if (!reason) {
@@ -77,9 +79,9 @@ export function ReportDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Reason</Label>
+            <Label htmlFor={reasonId}>Reason</Label>
             <Select value={reason} onValueChange={(v) => setReason(v as ReportReason)}>
-              <SelectTrigger>
+              <SelectTrigger id={reasonId}>
                 <SelectValue placeholder="Select a reason" />
               </SelectTrigger>
               <SelectContent>
@@ -92,8 +94,8 @@ export function ReportDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Details (optional)</Label>
-            <Textarea value={details} onChange={(e) => setDetails(e.target.value)} />
+            <Label htmlFor={detailsId}>Details (optional)</Label>
+            <Textarea id={detailsId} value={details} onChange={(e) => setDetails(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
