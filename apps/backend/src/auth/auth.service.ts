@@ -17,6 +17,7 @@ import { LoginDto } from "./dto/login.dto";
 import { UserStatus } from "@prisma/client";
 import { AuthUser } from "../common/decorators/current-user.decorator";
 import { normalizeKenyanPhone } from "../common/phone";
+import { AccountBlocksService, formatBlockDate } from "../account-blocks/account-blocks.service";
 
 export interface TokenPair {
   accessToken: string;
@@ -33,6 +34,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly emailService: EmailService,
     private readonly kycService: KycService,
+    private readonly accountBlocks: AccountBlocksService,
   ) {}
 
   private hash(value: string): string {
@@ -43,9 +45,16 @@ export class AuthService {
     id: string;
     email: string;
     isAdmin: boolean;
+    isSuperAdmin: boolean;
     kycStatus: AuthUser["kycStatus"];
   }): AuthUser {
-    return { id: user.id, email: user.email, isAdmin: user.isAdmin, kycStatus: user.kycStatus };
+    return {
+      id: user.id,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      isSuperAdmin: user.isSuperAdmin,
+      kycStatus: user.kycStatus,
+    };
   }
 
   private async issueTokens(authUser: AuthUser): Promise<TokenPair> {
@@ -89,6 +98,7 @@ export class AuthService {
     if (phoneTaken) {
       throw new ConflictException("This phone number is already linked to another account");
     }
+    await this.accountBlocks.assertNotBlocked({ email: dto.email, phone });
     const passwordHash = await argon2.hash(dto.password);
     const user = await this.prisma.user.create({
       data: {
@@ -114,6 +124,15 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<TokenPair & { user: AuthUser }> {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (!user) {
+      // Say so plainly when the account was deleted, rather than a puzzling "invalid password".
+      const block = await this.accountBlocks.findActiveBlock({ email: dto.email });
+      if (block?.kind === "email") {
+        throw new UnauthorizedException(
+          `This account was deleted. You can create a new account with this email from ${formatBlockDate(block.blockedUntil)}.`,
+        );
+      }
+    }
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException("Invalid email or password");
     }
@@ -236,6 +255,9 @@ export class AuthService {
       if (user) {
         user = await this.prisma.user.update({ where: { id: user.id }, data: { googleId } });
       } else {
+        // Without this, signing in with Google right after deleting an account silently
+        // created a brand-new one.
+        await this.accountBlocks.assertNotBlocked({ email, googleId });
         user = await this.prisma.user.create({
           data: {
             email,

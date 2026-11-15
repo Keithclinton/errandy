@@ -73,7 +73,7 @@ export class BidsService {
       orderBy: { createdAt: "desc" },
       include: {
         listing: { select: { id: true, title: true, status: true } },
-        bidder: { select: { id: true, name: true, avatarUrl: true, ratingAvg: true, ratingCount: true } },
+        bidder: { select: { id: true, name: true, avatarUrl: true, ratingAvg: true, ratingCount: true, idVerifiedAt: true } },
       },
     });
   }

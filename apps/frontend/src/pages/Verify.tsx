@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IdCheckSection } from "@/components/verification/IdCheckSection";
 
 export default function Verify() {
   const location = useLocation();
@@ -51,13 +52,17 @@ export default function Verify() {
   };
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-lg space-y-6">
+      <div className="text-center">
+        <ShieldCheck className="mx-auto mb-2 h-10 w-10 text-primary" aria-hidden />
+        <h1 className="text-2xl font-semibold">Verification</h1>
+      </div>
       <Card>
-        <CardHeader className="items-center text-center">
-          <ShieldCheck className="mb-2 h-10 w-10 text-primary" />
-          <CardTitle as="h1">Identity verification</CardTitle>
+        <CardHeader>
+          <CardTitle as="h2">Phone number</CardTitle>
           <CardDescription>
-            A quick phone number check keeps everyone on Errandspot accountable.
+            Needed before you post a task or make an offer. A quick check that keeps everyone on Errandspot
+            accountable.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -66,7 +71,7 @@ export default function Verify() {
             return (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
                 <CheckCircle2 className="h-10 w-10 text-primary" />
-                <p className="font-medium">You're verified</p>
+                <p className="font-medium">Your phone number is verified</p>
                 <p className="text-sm text-muted-foreground">You can post tasks and make offers.</p>
                 <Button
                   className="mt-2"
@@ -157,6 +162,8 @@ export default function Verify() {
           )}
         </CardContent>
       </Card>
+
+      {data && <IdCheckSection phoneVerified={status === "verified"} idCheck={data.idVerification} />}
     </div>
   );
 }

@@ -17,7 +17,6 @@ import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import heroIllustration from "@/assets/hero-illustration.webp";
-import logoIcon from "@/assets/logo-icon.png";
 
 const valueProps = [
   { icon: Clock, title: "Save Time", body: "Let someone else handle it." },
@@ -40,14 +39,6 @@ const trustItems = [
   { icon: LayoutGrid, title: "Variety of Tasks", body: "Errands, labour, skills & more." },
 ];
 
-const footerLinks = [
-  { to: "/about", label: "About us" },
-  { to: "/safety", label: "Safety" },
-  { to: "/help", label: "Help Center" },
-  { to: "/terms", label: "Terms" },
-  { to: "/privacy", label: "Privacy" },
-];
-
 export default function Landing() {
   const { user, isLoading } = useAuth();
   const location = useLocation();
@@ -62,7 +53,7 @@ export default function Landing() {
   if (user) return <Navigate to="/browse" replace />;
 
   return (
-    <div className="space-y-12 pb-12">
+    <div className="space-y-12 pb-6">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-secondary via-secondary to-primary/10 px-6 py-16">
         <div
@@ -202,20 +193,6 @@ export default function Landing() {
           </Button>
         </div>
       </section>
-
-      <footer className="rounded-xl space-y-6 bg-primary px-6 py-10 text-center text-sm text-primary-foreground/70">
-        <Link to="/" className="inline-flex items-center gap-2 text-base font-semibold text-primary-foreground">
-          <img src={logoIcon} alt="" className="h-7 w-7" />
-          Errandspot
-        </Link>
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          {footerLinks.map((link) => (
-            <Link key={link.to} to={link.to} className="hover:text-primary-foreground hover:underline">
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      </footer>
     </div>
   );
 }

@@ -1,11 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import type { Bid, KycStatus, KycVerification, Listing, Paginated, Report, ReportStatus, User } from "@/types/api";
+import type {
+  Bid,
+  IdCheck,
+  IdCheckDetail,
+  KycStatus,
+  KycVerification,
+  Listing,
+  Paginated,
+  Report,
+  ReportStatus,
+  User,
+} from "@/types/api";
+
+export interface AdminUserListItem extends User {
+  /** "verified" once approved, else the latest check's status, or "none". */
+  idCheckStatus: KycStatus;
+}
 
 export function useAdminUsers(search: string) {
   return useQuery({
     queryKey: ["admin", "users", search],
-    queryFn: () => apiFetch<Paginated<User>>("/admin/users", { params: { search } }),
+    queryFn: () => apiFetch<Paginated<AdminUserListItem>>("/admin/users", { params: { search } }),
   });
 }
 
@@ -13,7 +29,62 @@ export interface AdminUserDetail extends User {
   listings: Listing[];
   bids: Bid[];
   kycVerifications: KycVerification[];
+  idVerifications: Omit<IdCheck, "user" | "consentAt">[];
   reportsFiled: Report[];
+}
+
+/**
+ * Whether `viewer` may suspend, reinstate or delete `target`. Mirrors the server's rule:
+ * only the super admin acts on admins, and no one on the super admin or themselves.
+ */
+export function canManageAccount(
+  viewer: Pick<User, "id" | "isSuperAdmin">,
+  target: Pick<User, "id" | "isAdmin" | "isSuperAdmin">,
+): boolean {
+  if (target.id === viewer.id || target.isSuperAdmin) return false;
+  return !target.isAdmin || viewer.isSuperAdmin;
+}
+
+/** Super admin only: make someone an admin, or take it away. */
+export function useSetAdminAccess() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) =>
+      apiFetch(`/admin/users/${userId}/admin`, { method: "PATCH", body: { isAdmin } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+  });
+}
+
+export type IdCheckFilter = "pending" | "verified" | "rejected";
+
+export function useAdminIdChecks(status: IdCheckFilter = "pending") {
+  return useQuery({
+    queryKey: ["admin", "id-checks", status],
+    queryFn: () => apiFetch<IdCheck[]>("/admin/id-verifications", { params: { status } }),
+  });
+}
+
+export function useAdminIdCheck(id: string | undefined) {
+  return useQuery({
+    queryKey: ["admin", "id-checks", "detail", id],
+    queryFn: () => apiFetch<IdCheckDetail>(`/admin/id-verifications/${id}`),
+    enabled: !!id,
+    // Holds ID photos: don't keep them around in memory after leaving the page.
+    gcTime: 0,
+  });
+}
+
+export function useReviewIdCheck() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, decision, reason }: { id: string; decision: "approve" | "reject"; reason?: string }) =>
+      apiFetch<IdCheckDetail>(`/admin/id-verifications/${id}`, { method: "PATCH", body: { decision, reason } }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["admin", "id-checks", "detail", data.id], data);
+      queryClient.invalidateQueries({ queryKey: ["admin", "id-checks"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
 }
 
 export function useAdminUserDetail(userId: string | undefined) {

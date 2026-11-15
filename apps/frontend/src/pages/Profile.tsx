@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { RatingsList } from "@/components/ratings/RatingsList";
 import { ReportDialog } from "@/components/reports/ReportDialog";
+import { IdVerifiedBadge } from "@/components/users/IdVerifiedBadge";
 import { initials, formatRelativeTime } from "@/lib/format";
 import type { Listing } from "@/types/api";
 
@@ -32,7 +33,10 @@ export default function Profile() {
             <AvatarFallback className="text-lg">{initials(profile.name)}</AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-xl font-semibold">{profile.name}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-semibold">{profile.name}</h1>
+              {profile.idVerifiedAt && <IdVerifiedBadge />}
+            </div>
             <p className="text-sm text-muted-foreground">
               {profile.ratingCount > 0 ? `★ ${profile.ratingAvg.toFixed(1)} (${profile.ratingCount} reviews)` : "No reviews yet"}
             </p>

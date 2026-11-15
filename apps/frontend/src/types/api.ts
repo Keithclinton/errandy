@@ -13,7 +13,9 @@ export type NotificationType =
   | "please_rate"
   | "report_resolved"
   | "bidder_token_required"
-  | "tokens_purchased";
+  | "tokens_purchased"
+  | "id_verification_submitted"
+  | "id_verification_reviewed";
 export type TokenTransactionType = "signup_grant" | "listing_post" | "bid_accept_deduction" | "purchase";
 export type TokenPurchaseStatus = "pending" | "completed" | "failed";
 
@@ -21,6 +23,7 @@ export interface AuthUser {
   id: string;
   email: string;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   kycStatus: KycStatus;
 }
 
@@ -32,8 +35,13 @@ export interface User {
   avatarUrl?: string | null;
   bio?: string | null;
   portfolioUrls: string[];
+  /** Phone verification, required to post or make offers. */
   kycStatus: KycStatus;
+  /** When an admin approved their ID check; null if they don't have the ID verified badge. */
+  idVerifiedAt?: string | null;
   isAdmin: boolean;
+  /** Can make or remove admins, and is the only one who can suspend or delete an admin. */
+  isSuperAdmin: boolean;
   status: UserStatus;
   ratingAvg: number;
   ratingCount: number;
@@ -51,6 +59,7 @@ export interface PublicProfile {
   portfolioUrls: string[];
   ratingAvg: number;
   ratingCount: number;
+  idVerifiedAt?: string | null;
   createdAt: string;
   tasksCompleted: number;
   listings: Pick<Listing, "id" | "title" | "category" | "location" | "budget" | "createdAt">[];
@@ -63,6 +72,7 @@ export interface ListingOwner {
   ratingAvg: number;
   ratingCount: number;
   kycStatus?: KycStatus;
+  idVerifiedAt?: string | null;
   _count?: { listings: number };
 }
 
@@ -177,6 +187,46 @@ export interface KycVerification {
   status: KycStatus;
   consentAt: string;
   reviewedAt?: string | null;
+}
+
+export type IdDocumentType = "national_id" | "passport" | "alien_id";
+export type IdImageKind = "front" | "back" | "selfie";
+
+export const ID_DOCUMENT_LABELS: Record<IdDocumentType, string> = {
+  national_id: "National ID",
+  passport: "Passport",
+  alien_id: "Alien ID",
+};
+
+/** A user's own view of their ID check. */
+export interface OwnIdCheck {
+  status: KycStatus;
+  verifiedAt: string | null;
+  documentType: IdDocumentType | null;
+  submittedAt: string | null;
+  rejectionReason: string | null;
+}
+
+/** An ID check as an admin sees it in the review queue. */
+export interface IdCheck {
+  id: string;
+  documentType: IdDocumentType;
+  fullName: string;
+  idNumber: string;
+  status: KycStatus;
+  rejectionReason: string | null;
+  consentAt: string;
+  createdAt: string;
+  reviewedAt: string | null;
+  user: { id: string; name: string; email: string; avatarUrl?: string | null; idVerifiedAt: string | null };
+  reviewedBy: { id: string; name: string } | null;
+}
+
+export interface IdCheckDetail extends IdCheck {
+  /** Empty once the check has been reviewed: the photos are deleted then. */
+  images: { kind: IdImageKind; dataUrl: string }[];
+  /** Other checks that used the same document number. */
+  sameIdNumber: { id: string; status: KycStatus; createdAt: string; user: { id: string; name: string; email: string } }[];
 }
 
 export interface TokenTransaction {

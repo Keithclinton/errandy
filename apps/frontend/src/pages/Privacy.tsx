@@ -2,7 +2,7 @@ export default function Privacy() {
   return (
     <article className="prose prose-sm mx-auto max-w-2xl space-y-4">
       <h1 className="text-2xl font-semibold">Privacy Policy</h1>
-      <p className="text-sm text-muted-foreground">Last updated: September 21, 2026</p>
+      <p className="text-sm text-muted-foreground">Last updated: November 16, 2026</p>
 
       <p className="text-sm">
         This policy explains what personal data Errandspot collects, why, and what rights you have over it under
@@ -17,6 +17,11 @@ export default function Privacy() {
         <li>
           Verification data: the phone number you verify, and a one-time SMS code sent to it. The code itself is
           never stored in readable form and expires shortly after it's sent.
+        </li>
+        <li>
+          ID check data, only if you choose to verify your ID: the type of document, the name and number on it,
+          photos of the document, and a selfie. An Errandspot admin compares them by hand to confirm who you are.
+          The photos are deleted as soon as the check is approved or rejected.
         </li>
         <li>
           Task and offer content: anything you post when creating a task or making an offer, including
@@ -51,7 +56,9 @@ export default function Privacy() {
       <h2 className="text-lg font-medium">3. Who we share it with</h2>
       <p className="text-sm">
         Other users see what's needed to use the Service as intended: for example, a provider sees the task
-        poster's name and rating, and vice versa, once they're in contact. We share data with service providers
+        poster's name and rating, and vice versa, once they're in contact. If you complete an ID check, other
+        users see only an "ID verified" badge, never your document, its number, or your photos. We share data
+        with service providers
         who help us run Errandspot, such as our hosting provider, our SMS-delivery provider, and the licensed
         payment provider that processes Errandspot's platform fees, only to the extent needed for them to
         provide that service to us, and under terms that require them to protect it. We don't sell your personal
@@ -70,7 +77,13 @@ export default function Privacy() {
         We retain your account data for as long as your account is active. If you close your account, we retain
         data only as long as needed for legitimate purposes such as resolving disputes, enforcing our Terms, or
         meeting legal obligations, after which it's deleted or anonymized. Verification codes are retained only
-        briefly, per Section 1.
+        briefly, per Section 1. ID check photos are kept only until the check is reviewed; the document type,
+        name and number are kept while your account exists.
+      </p>
+      <p className="text-sm">
+        When an account is deleted, we keep a fingerprint of its email address, verified phone number and Google
+        account for 90 days, so they can't be used to open a new account straight away. These fingerprints are
+        keyed hashes, not your details in readable form, and they're deleted when the 90 days are up.
       </p>
 
       <h2 className="text-lg font-medium">6. Your rights</h2>

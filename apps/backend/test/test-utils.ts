@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test, TestingModuleBuilder } from "@nestjs/testing";
-import { json, urlencoded } from "express";
+import { applyBodyParsers } from "../src/body-parsers";
 import * as request from "supertest";
 import * as jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
@@ -23,14 +23,7 @@ export async function createTestApp(
     Test.createTestingModule({ imports: [AppModule] }).overrideProvider(SmsService).useClass(FakeSmsService),
   ).compile();
   const app = moduleFixture.createNestApplication({ bodyParser: false });
-  app.use(
-    json({
-      verify: (req: any, _res, buf) => {
-        req.rawBody = buf;
-      },
-    }),
-  );
-  app.use(urlencoded({ extended: true }));
+  applyBodyParsers(app);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }));
   await app.init();
   return app;
@@ -77,6 +70,8 @@ export async function cleanDatabase(prisma: PrismaClient) {
   await prisma.listing.deleteMany();
   await prisma.phoneOtp.deleteMany();
   await prisma.kycVerification.deleteMany();
+  await prisma.idVerification.deleteMany(); // photos cascade
+  await prisma.accountDeletionBlock.deleteMany();
   await prisma.tokenTransaction.deleteMany();
   await prisma.tokenPurchase.deleteMany();
   await prisma.user.deleteMany();

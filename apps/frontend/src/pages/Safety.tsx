@@ -15,6 +15,11 @@ export default function Safety() {
         check, not a background check: it confirms you're dealing with a real, reachable person, not proof of
         anyone's character or skill. Treat every new contact accordingly.
       </p>
+      <p className="text-sm">
+        Some people also complete an optional ID check, which an Errandspot admin reviews by hand, and show an
+        "ID verified" badge. It confirms who they are, but like the phone check, it says nothing about their
+        character or skill.
+      </p>
 
       <h2 className="text-lg font-medium">Ratings and reports</h2>
       <p className="text-sm">

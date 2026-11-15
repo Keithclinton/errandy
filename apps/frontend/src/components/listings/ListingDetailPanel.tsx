@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isNewListing } from "./ListingListItem";
+import { IdVerifiedBadge } from "@/components/users/IdVerifiedBadge";
 
 export function ListingDetailPanel({ listingId }: { listingId: string }) {
   const { user } = useAuth();
@@ -83,6 +84,7 @@ export function ListingDetailPanel({ listingId }: { listingId: string }) {
                 {listing.owner.kycStatus === "verified" && (
                   <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-label="Verified" />
                 )}
+                {listing.owner.idVerifiedAt && <IdVerifiedBadge />}
               </div>
               <p className="flex items-center gap-2 text-xs text-muted-foreground">
                 {listing.owner.ratingCount > 0 && (

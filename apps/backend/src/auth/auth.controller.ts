@@ -12,6 +12,7 @@ import { RefreshTokenDto } from "./dto/refresh-token.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { AcceptTermsDto } from "./dto/accept-terms.dto";
+import { GoogleCallbackGuard, GOOGLE_SIGN_IN_FAILED } from "./guards/google-callback.guard";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -72,17 +73,21 @@ export class AuthController {
 
   @Public()
   @Get("google/callback")
-  @UseGuards(AuthGuard("google"))
-  async googleCallback(@Req() req: Request, @Res() res: Response) {
-    const authUser = req.user as AuthUser;
-    const tokens = await this.authService.issueTokensForGoogleUser(authUser);
+  @UseGuards(GoogleCallbackGuard)
+  async googleCallback(@Req() req: Request & { googleAuthError?: string }, @Res() res: Response) {
     const configuredOrigin = this.config.get<string>("CORS_ORIGIN")?.split(",")[0]?.trim();
     const forwardedProto = (req.headers["x-forwarded-proto"] as string | undefined)?.split(",")[0];
     const frontendUrl = configuredOrigin || `${forwardedProto ?? req.protocol}://${req.get("host")}`;
+    const redirectUrl = new URL("/auth/callback", frontendUrl);
+    if (req.googleAuthError || !req.user) {
+      redirectUrl.hash = new URLSearchParams({ error: req.googleAuthError ?? GOOGLE_SIGN_IN_FAILED }).toString();
+      res.redirect(redirectUrl.toString());
+      return;
+    }
+    const tokens = await this.authService.issueTokensForGoogleUser(req.user as AuthUser);
     // Tokens go in the URL fragment, not the query string: fragments are never sent
     // to the server or in the Referer header, so they can't leak via access logs or
     // third-party resources loaded on the callback page — only the browser sees them.
-    const redirectUrl = new URL("/auth/callback", frontendUrl);
     redirectUrl.hash = new URLSearchParams({
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,

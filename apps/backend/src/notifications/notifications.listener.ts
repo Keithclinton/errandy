@@ -12,6 +12,8 @@ import {
   ReportResolvedEvent,
   BidTokenRequiredEvent,
   TokensPurchasedEvent,
+  IdVerificationSubmittedEvent,
+  IdVerificationReviewedEvent,
 } from "../common/events/domain-events";
 
 @Injectable()
@@ -115,6 +117,34 @@ export class NotificationsListener {
       body: `${event.tokens} token(s) added to your balance. New balance: ${event.balanceAfter}.`,
       entityType: "token_purchase",
       entityId: event.purchaseId,
+    });
+  }
+
+  @OnEvent(EVENTS.ID_VERIFICATION_SUBMITTED)
+  onIdVerificationSubmitted(event: IdVerificationSubmittedEvent) {
+    return this.notifications.notifyAdmins(
+      {
+        type: NotificationType.id_verification_submitted,
+        title: "New ID check to review",
+        body: "Someone sent their ID for verification. Review it in the admin panel.",
+        entityType: "id_check",
+        entityId: event.verificationId,
+      },
+      event.userId,
+    );
+  }
+
+  @OnEvent(EVENTS.ID_VERIFICATION_REVIEWED)
+  onIdVerificationReviewed(event: IdVerificationReviewedEvent) {
+    return this.notifications.create({
+      userId: event.userId,
+      type: NotificationType.id_verification_reviewed,
+      title: event.approved ? "Your ID is verified" : "Your ID check wasn't approved",
+      body: event.approved
+        ? "Your profile now shows an ID verified badge."
+        : `Reason: ${/[.!?]$/.test(event.reason ?? "") ? event.reason : `${event.reason}.`} You can send it again from the Verification page.`,
+      entityType: "verification",
+      entityId: event.verificationId,
     });
   }
 }

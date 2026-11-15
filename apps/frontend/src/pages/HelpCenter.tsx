@@ -93,6 +93,11 @@ export default function HelpCenter() {
         SMS. It confirms you're a real, reachable person; it isn't a background check, so use good judgment
         with anyone new the same way you would anywhere else.
       </p>
+      <p className="text-sm">
+        You can also do an optional ID check from the Verification page: send a photo of your ID or passport
+        and a selfie, and an Errandspot admin checks them by hand. Once it's approved, your profile, tasks and
+        offers show an "ID verified" badge. We delete the photos as soon as they've been checked.
+      </p>
 
       <h3 className="text-base font-medium">How do ratings work?</h3>
       <p className="text-sm">
@@ -125,7 +130,9 @@ export default function HelpCenter() {
       <p className="text-sm">
         You can delete your account yourself from your profile settings, or email support@errandspot.com and
         we'll act on your request in line with your rights under the Data Protection Act, 2019; see our Privacy
-        Policy for the details.
+        Policy for the details. Deleting is permanent: you lose any unused tokens, your reviews and your
+        history, and the same email, phone number or Google account can't be used to sign up again for 3
+        months. Admin accounts can only be deleted by the super admin.
       </p>
 
       <h3 className="text-base font-medium">Where does Errandspot operate?</h3>

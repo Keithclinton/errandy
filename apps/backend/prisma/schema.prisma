@@ -66,6 +66,20 @@ enum NotificationType {
   report_resolved
   bidder_token_required
   tokens_purchased
+  id_verification_submitted
+  id_verification_reviewed
+}
+
+enum IdDocumentType {
+  national_id
+  passport
+  alien_id
+}
+
+enum IdImageKind {
+  front
+  back
+  selfie
 }
 
 enum TokenTransactionType {
@@ -102,6 +116,11 @@ model User {
   portfolioUrls   String[]  @default([])
   kycStatus       KycStatus @default(none)
   isAdmin         Boolean   @default(false)
+  // Makes and removes admins, and is the only one who can suspend or delete an admin.
+  // Set directly in the database; no endpoint grants it.
+  isSuperAdmin    Boolean   @default(false)
+  // Set when an admin approves the user's ID check. Public: shown as an "ID verified" badge.
+  idVerifiedAt    DateTime?
   status          UserStatus @default(active)
   ratingAvg       Float     @default(0)
   ratingCount     Int       @default(0)
@@ -117,6 +136,8 @@ model User {
   passwordResetExpiresAt DateTime?
 
   kycVerifications   KycVerification[]
+  idVerifications         IdVerification[] @relation("IdVerificationOwner")
+  idVerificationsReviewed IdVerification[] @relation("IdVerificationReviewer")
   phoneOtps          PhoneOtp[]
   tokenTransactions  TokenTransaction[]
   tokenPurchases     TokenPurchase[]
@@ -147,6 +168,57 @@ model KycVerification {
 
   @@index([userId])
   @@map("kyc_verifications")
+}
+
+// An ID check a user submitted for an admin to review by hand (until a KYC vendor takes
+// over). The photos are deleted as soon as it's approved or rejected; the rest is kept.
+model IdVerification {
+  id              String         @id @default(cuid())
+  userId          String
+  documentType    IdDocumentType
+  fullName        String
+  idNumber        String
+  status          KycStatus      @default(pending)
+  rejectionReason String?
+  consentAt       DateTime
+  reviewedById    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime       @default(now())
+
+  user       User                  @relation("IdVerificationOwner", fields: [userId], references: [id])
+  reviewedBy User?                 @relation("IdVerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  images     IdVerificationImage[]
+
+  @@index([userId])
+  @@index([status, createdAt])
+  @@index([idNumber])
+  @@map("id_verifications")
+}
+
+model IdVerificationImage {
+  id             String      @id @default(cuid())
+  verificationId String
+  kind           IdImageKind
+  contentType    String
+  data           Bytes
+  createdAt      DateTime    @default(now())
+
+  verification IdVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@unique([verificationId, kind])
+  @@map("id_verification_images")
+}
+
+// Stops a deleted account's email, phone number or Google account from signing up again
+// (and collecting the welcome tokens again) until blockedUntil. Holds only keyed hashes,
+// never the email or number itself, and rows are purged once they expire.
+model AccountDeletionBlock {
+  identifierHash String   @id
+  blockedUntil   DateTime
+  createdAt      DateTime @default(now())
+
+  @@index([blockedUntil])
+  @@map("account_deletion_blocks")
 }
 
 model PhoneOtp {

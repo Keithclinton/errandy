@@ -12,7 +12,22 @@ export const EVENTS = {
   CHAT_STARTED: "chat.started",
   BID_TOKEN_REQUIRED: "bid.token_required",
   TOKENS_PURCHASED: "tokens.purchased",
+  ID_VERIFICATION_SUBMITTED: "id_verification.submitted",
+  ID_VERIFICATION_REVIEWED: "id_verification.reviewed",
 } as const;
+
+export interface IdVerificationSubmittedEvent {
+  verificationId: string;
+  userId: string;
+}
+
+export interface IdVerificationReviewedEvent {
+  verificationId: string;
+  userId: string;
+  approved: boolean;
+  /** Shown to the user when it wasn't approved. */
+  reason: string | null;
+}
 
 export interface BidReceivedEvent {
   bidId: string;

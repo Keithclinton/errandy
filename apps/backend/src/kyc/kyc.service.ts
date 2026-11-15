@@ -6,6 +6,7 @@ import { SmsService } from "../sms/sms.service";
 import { TokensService } from "../tokens/tokens.service";
 import { KycStatus } from "@prisma/client";
 import { normalizeKenyanPhone } from "../common/phone";
+import { AccountBlocksService } from "../account-blocks/account-blocks.service";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
@@ -17,6 +18,7 @@ export class KycService {
     private readonly prisma: PrismaService,
     private readonly smsService: SmsService,
     private readonly tokensService: TokensService,
+    private readonly accountBlocks: AccountBlocksService,
   ) {}
 
   private hash(code: string): string {
@@ -29,6 +31,9 @@ export class KycService {
     const claimedBy = await this.prisma.user.findUnique({ where: { phone } });
     if (claimedBy && claimedBy.id !== userId) {
       throw new ConflictException("This phone number is already linked to another account");
+    }
+    if (claimedBy?.id !== userId) {
+      await this.accountBlocks.assertNotBlocked({ phone });
     }
 
     const recent = await this.prisma.phoneOtp.findFirst({

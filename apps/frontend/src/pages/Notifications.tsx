@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { HandCoins, CheckCircle2, XCircle, MessageCircle, Star, ShieldCheck, Coins, Bell } from "lucide-react";
+import { HandCoins, CheckCircle2, XCircle, MessageCircle, Star, ShieldCheck, Coins, Bell, IdCard } from "lucide-react";
 import { useNotifications, useMarkNotificationRead, notificationHref } from "@/hooks/use-notifications";
 import type { NotificationType } from "@/types/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,8 @@ const NOTIFICATION_STYLES: Record<NotificationType, { icon: typeof Bell; classNa
   report_resolved: { icon: ShieldCheck, className: "bg-slate-100 text-slate-600" },
   bidder_token_required: { icon: Coins, className: "bg-amber-100 text-amber-600" },
   tokens_purchased: { icon: Coins, className: "bg-emerald-100 text-emerald-600" },
+  id_verification_submitted: { icon: IdCard, className: "bg-sky-100 text-sky-600" },
+  id_verification_reviewed: { icon: ShieldCheck, className: "bg-emerald-100 text-emerald-600" },
 };
 
 export default function Notifications() {

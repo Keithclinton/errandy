@@ -16,6 +16,7 @@ import {
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { TokenBalanceBadge } from "@/components/tokens/TokenBalanceBadge";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { cn } from "@/lib/utils";
 import logoIcon from "@/assets/logo-icon.png";
 
@@ -152,11 +153,16 @@ export function AppShell() {
         </div>
       </header>
 
-      <main className="container flex-1 py-6 pb-20 md:pb-6">
+      <main className="container flex-1 py-6">
         <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>
       </main>
+
+      {/* Bottom padding keeps the footer clear of the fixed mobile nav, shown when signed in. */}
+      <div className={cn("container pb-6", user && "pb-20 md:pb-6")}>
+        <SiteFooter />
+      </div>
 
       {user && (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background md:hidden">

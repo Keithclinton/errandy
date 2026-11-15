@@ -29,7 +29,7 @@ export class UsersController {
 
   @Delete("me")
   deleteMe(@CurrentUser() user: AuthUser) {
-    return this.usersService.deleteAccount(user.id);
+    return this.usersService.deleteOwnAccount(user);
   }
 
   @Public()

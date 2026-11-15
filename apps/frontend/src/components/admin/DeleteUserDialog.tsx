@@ -47,7 +47,8 @@ export function DeleteUserDialog({ userId, email }: { userId: string; email: str
           <p className="text-sm text-muted-foreground">
             This permanently deletes <span className="font-medium text-foreground">{email}</span> and every
             listing, offer, chat, and rating tied to them, including listings other people bid on. This
-            cannot be undone.
+            cannot be undone. Their email, phone number and Google account can't be used to sign up again for 3
+            months.
           </p>
           <div className="space-y-2">
             <Label htmlFor="confirm-email">Type the email to confirm</Label>

@@ -4,6 +4,7 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
 import { PrismaModule } from "./prisma/prisma.module";
+import { AccountBlocksModule } from "./account-blocks/account-blocks.module";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { KycModule } from "./kyc/kyc.module";
@@ -25,6 +26,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     EventEmitterModule.forRoot(),
     PrismaModule,
+    AccountBlocksModule,
     EmailModule,
     AuthModule,
     UsersModule,

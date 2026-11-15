@@ -4,8 +4,9 @@ import { ValidationPipe, INestApplication } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { ExpressAdapter } from "@nestjs/platform-express";
 import helmet from "helmet";
-import { json, urlencoded, Express } from "express";
+import { Express } from "express";
 import { AppModule } from "./app.module";
+import { applyBodyParsers } from "./body-parsers";
 
 /**
  * Builds and initializes the Nest app without starting a listener, so the same
@@ -20,14 +21,7 @@ export async function createApp(expressInstance?: Express): Promise<INestApplica
     : await NestFactory.create(AppModule, { bodyParser: false });
 
   app.use(helmet());
-  app.use(
-    json({
-      verify: (req: any, _res, buf) => {
-        req.rawBody = buf;
-      },
-    }),
-  );
-  app.use(urlencoded({ extended: true }));
+  applyBodyParsers(app);
   // The frontend authenticates with a manually-attached Bearer header, never
   // browser-managed cookies, so there's no `credentials: true` to justify reflecting
   // arbitrary origins — fail closed (deny cross-origin) if CORS_ORIGIN isn't set,

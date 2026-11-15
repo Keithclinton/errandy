@@ -42,6 +42,10 @@ export function notificationHref(notification: Notification): string {
       return `/chat/${notification.entityId}`;
     case "report":
       return `/admin/reports`;
+    case "id_check":
+      return `/admin/id-checks/${notification.entityId}`;
+    case "verification":
+      return "/verify";
     default:
       return "/notifications";
   }

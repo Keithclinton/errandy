@@ -37,6 +37,8 @@ const Thread = lazy(() => import("@/pages/chat/Thread"));
 const AdminUsers = lazy(() => import("@/pages/admin/Users"));
 const AdminUserDetail = lazy(() => import("@/pages/admin/UserDetail"));
 const AdminReports = lazy(() => import("@/pages/admin/Reports"));
+const AdminIdChecks = lazy(() => import("@/pages/admin/IdChecks"));
+const AdminIdCheckDetail = lazy(() => import("@/pages/admin/IdCheckDetail"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/Analytics"));
 
 export default function App() {
@@ -78,6 +80,8 @@ export default function App() {
             <Route index element={<Navigate to="/admin/users" replace />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="users/:id" element={<AdminUserDetail />} />
+            <Route path="id-checks" element={<AdminIdChecks />} />
+            <Route path="id-checks/:id" element={<AdminIdCheckDetail />} />
             <Route path="reports" element={<AdminReports />} />
             <Route path="analytics" element={<AdminAnalytics />} />
           </Route>

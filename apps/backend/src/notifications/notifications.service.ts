@@ -1,20 +1,32 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { NotificationType } from "@prisma/client";
+import { NotificationType, UserStatus } from "@prisma/client";
+
+interface NewNotification {
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  entityType: string;
+  entityId: string;
+}
 
 @Injectable()
 export class NotificationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(params: {
-    userId: string;
-    type: NotificationType;
-    title: string;
-    body: string;
-    entityType: string;
-    entityId: string;
-  }) {
+  create(params: NewNotification) {
     return this.prisma.notification.create({ data: params });
+  }
+
+  /** Sends the same notification to every active admin, except `excludeUserId` if given. */
+  async notifyAdmins(params: Omit<NewNotification, "userId">, excludeUserId?: string) {
+    const admins = await this.prisma.user.findMany({
+      where: { isAdmin: true, status: UserStatus.active, ...(excludeUserId && { id: { not: excludeUserId } }) },
+      select: { id: true },
+    });
+    if (admins.length === 0) return;
+    await this.prisma.notification.createMany({ data: admins.map((admin) => ({ ...params, userId: admin.id })) });
   }
 
   async listForUser(userId: string, page = 1, limit = 20) {

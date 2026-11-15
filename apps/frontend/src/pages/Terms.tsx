@@ -2,7 +2,7 @@ export default function Terms() {
   return (
     <article className="prose prose-sm mx-auto max-w-2xl space-y-4">
       <h1 className="text-2xl font-semibold">Terms of Service</h1>
-      <p className="text-sm text-muted-foreground">Last updated: September 21, 2026</p>
+      <p className="text-sm text-muted-foreground">Last updated: November 16, 2026</p>
 
       <p className="text-sm">
         These Terms govern your use of Errandspot (the "Service"). By creating an account, posting a task, or
@@ -32,6 +32,11 @@ export default function Terms() {
         one-time code sent to it by SMS. You must provide a phone number that is genuinely yours. Verification
         confirms you are a real, reachable person; it is not a background check, and Errandspot makes no
         representation about the skill, reliability, or character of any verified user.
+      </p>
+      <p className="text-sm">
+        You may also choose to complete an ID check by sending photos of your own, genuine identity document and
+        a selfie, which Errandspot reviews. An approved check adds an "ID verified" badge to your profile. It
+        confirms who you are, and like phone verification, it is not a background check.
       </p>
 
       <h2 className="text-lg font-medium">4. Posting tasks and making offers</h2>
@@ -137,7 +142,9 @@ export default function Terms() {
 
       <h2 className="text-lg font-medium">14. Termination</h2>
       <p className="text-sm">
-        You may stop using the Service and close your account at any time. Errandspot may suspend or terminate
+        You may stop using the Service and close your account at any time. Closing your account is permanent:
+        any unused tokens are forfeited, and the account's email address, phone number and Google account can't
+        be used to open a new account for 90 days. Errandspot may suspend or terminate
         your account for violating these Terms, for extended inactivity, or to protect the safety of other
         users, with notice where reasonably possible.
       </p>

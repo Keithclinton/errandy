@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatMoney, formatRelativeTime } from "@/lib/format";
 import type { Bid } from "@/types/api";
+import { IdVerifiedBadge } from "@/components/users/IdVerifiedBadge";
 
 const statusVariant: Record<Bid["status"], "default" | "secondary" | "destructive" | "outline"> = {
   pending: "secondary",
@@ -63,7 +64,12 @@ export function BidList({
                     {bid.listing.title}
                   </Link>
                 )}
-                {bid.bidder && <p className="text-xs text-muted-foreground">from {bid.bidder.name}</p>}
+                {bid.bidder && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="text-xs text-muted-foreground">from {bid.bidder.name}</p>
+                    {bid.bidder.idVerifiedAt && <IdVerifiedBadge />}
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{formatMoney(bid.amount)}</span>
                   <Badge variant={statusVariant[bid.status]}>{bid.status}</Badge>

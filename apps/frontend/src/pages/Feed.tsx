@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth-context";
 import { useListings, type ListingFilters as Filters } from "@/hooks/use-listings";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { CategoryPills } from "@/components/listings/CategoryPills";
+import { features } from "@/lib/features";
 import { ListingListItem } from "@/components/listings/ListingListItem";
 import { ListingDetailPanel } from "@/components/listings/ListingDetailPanel";
 import { BrowseSidebar } from "@/components/layout/BrowseSidebar";
@@ -84,10 +85,12 @@ export default function Feed() {
           </div>
         </div>
 
-        <CategoryPills
-          value={filters.category}
-          onChange={(category) => setFilters((f) => ({ ...f, category, page: 1 }))}
-        />
+        {features.commonCategories && (
+          <CategoryPills
+            value={filters.category}
+            onChange={(category) => setFilters((f) => ({ ...f, category, page: 1 }))}
+          />
+        )}
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">

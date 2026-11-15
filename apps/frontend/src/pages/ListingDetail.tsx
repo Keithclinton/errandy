@@ -18,6 +18,7 @@ import { BidList } from "@/components/bids/BidList";
 import { RatingsList } from "@/components/ratings/RatingsList";
 import { RatingPrompt } from "@/components/ratings/RatingPrompt";
 import { ReportDialog } from "@/components/reports/ReportDialog";
+import { IdVerifiedBadge } from "@/components/users/IdVerifiedBadge";
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -131,7 +132,10 @@ export default function ListingDetail() {
                 <AvatarFallback>{initials(listing.owner.name)}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium">{listing.owner.name}</p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="font-medium">{listing.owner.name}</p>
+                  {listing.owner.idVerifiedAt && <IdVerifiedBadge />}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {listing.owner.ratingCount > 0
                     ? `★ ${listing.owner.ratingAvg.toFixed(1)} (${listing.owner.ratingCount})`

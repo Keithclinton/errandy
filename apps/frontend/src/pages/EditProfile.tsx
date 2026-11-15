@@ -106,10 +106,20 @@ export default function EditProfile() {
 
       <div className="space-y-2 rounded-lg border border-destructive/30 p-4">
         <h2 className="font-medium">Danger zone</h2>
-        <p className="text-sm text-muted-foreground">
-          Permanently delete your account and everything tied to it. This can't be undone.
-        </p>
-        <DeleteAccountDialog />
+        {user?.isSuperAdmin ? (
+          <p className="text-sm text-muted-foreground">The super admin account can't be deleted.</p>
+        ) : user?.isAdmin ? (
+          <p className="text-sm text-muted-foreground">
+            Admin accounts can't be deleted here. Ask the super admin to delete it for you.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Permanently delete your account and everything tied to it. This can't be undone.
+            </p>
+            <DeleteAccountDialog />
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,19 +1,26 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Header, Param, Patch, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { AdminGuard } from "../common/guards/admin.guard";
+import { SuperAdminGuard } from "../common/guards/super-admin.guard";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
 import { AdminService } from "./admin.service";
+import { IdVerificationService } from "../kyc/id-verification.service";
 import { QueryUsersDto } from "./dto/query-users.dto";
 import { ResolveReportDto } from "./dto/resolve-report.dto";
 import { SetKycStatusDto } from "./dto/set-kyc-status.dto";
-import { ReportStatus } from "@prisma/client";
+import { SetAdminAccessDto } from "./dto/set-admin-access.dto";
+import { QueryIdVerificationsDto, ReviewIdVerificationDto } from "./dto/review-id-verification.dto";
+import { KycStatus, ReportStatus } from "@prisma/client";
 
 @ApiTags("admin")
 @ApiBearerAuth()
 @UseGuards(AdminGuard)
 @Controller("admin")
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly idVerificationService: IdVerificationService,
+  ) {}
 
   @Get("users")
   searchUsers(@Query() query: QueryUsersDto) {
@@ -26,13 +33,19 @@ export class AdminController {
   }
 
   @Patch("users/:id/suspend")
-  suspendUser(@Param("id") id: string) {
-    return this.adminService.suspendUser(id);
+  suspendUser(@CurrentUser() admin: AuthUser, @Param("id") id: string) {
+    return this.adminService.suspendUser(admin, id);
   }
 
   @Patch("users/:id/reinstate")
-  reinstateUser(@Param("id") id: string) {
-    return this.adminService.reinstateUser(id);
+  reinstateUser(@CurrentUser() admin: AuthUser, @Param("id") id: string) {
+    return this.adminService.reinstateUser(admin, id);
+  }
+
+  @Patch("users/:id/admin")
+  @UseGuards(SuperAdminGuard)
+  setAdminAccess(@CurrentUser() admin: AuthUser, @Param("id") id: string, @Body() dto: SetAdminAccessDto) {
+    return this.adminService.setAdminAccess(admin, id, dto.isAdmin);
   }
 
   @Patch("users/:id/kyc")
@@ -42,10 +55,25 @@ export class AdminController {
 
   @Delete("users/:id")
   deleteUser(@CurrentUser() admin: AuthUser, @Param("id") id: string) {
-    if (id === admin.id) {
-      throw new BadRequestException("You can't delete your own account from here");
-    }
-    return this.adminService.deleteUser(id);
+    return this.adminService.deleteUser(admin, id);
+  }
+
+  @Get("id-verifications")
+  listIdVerifications(@Query() query: QueryIdVerificationsDto) {
+    return this.idVerificationService.listForReview(query.status ?? KycStatus.pending);
+  }
+
+  // Carries ID photos, so it must never be cached anywhere.
+  @Get("id-verifications/:id")
+  @Header("Cache-Control", "no-store")
+  getIdVerification(@Param("id") id: string) {
+    return this.idVerificationService.getForReview(id);
+  }
+
+  @Patch("id-verifications/:id")
+  @Header("Cache-Control", "no-store")
+  reviewIdVerification(@CurrentUser() admin: AuthUser, @Param("id") id: string, @Body() dto: ReviewIdVerificationDto) {
+    return this.idVerificationService.review(id, admin.id, dto.decision, dto.reason);
   }
 
   @Get("reports")

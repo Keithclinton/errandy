@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useAdminUsers, useSuspendUser, useReinstateUser, useSetUserKycStatus } from "@/hooks/use-admin";
+import { useAuth } from "@/context/auth-context";
+import {
+  canManageAccount,
+  useAdminUsers,
+  useSuspendUser,
+  useReinstateUser,
+  useSetUserKycStatus,
+} from "@/hooks/use-admin";
 import { ApiError } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +17,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminUsers() {
+  const { user: me } = useAuth();
   const [search, setSearch] = useState("");
   const { data, isLoading } = useAdminUsers(search);
   const suspend = useSuspendUser();
@@ -33,7 +41,7 @@ export default function AdminUsers() {
   const handleVerify = async (userId: string) => {
     try {
       await setKycStatus.mutateAsync({ userId, status: "verified" });
-      toast.success("User verified");
+      toast.success("Phone marked as verified");
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Action failed.");
     }
@@ -42,7 +50,13 @@ export default function AdminUsers() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Users</h1>
-      <Input placeholder="Search by name or email…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
+      <Input
+        placeholder="Search by name or email…"
+        aria-label="Search users by name or email"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="max-w-sm"
+      />
 
       {isLoading && <Skeleton className="h-64" />}
 
@@ -53,7 +67,8 @@ export default function AdminUsers() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>KYC</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>ID</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Rating</TableHead>
                 <TableHead>
@@ -65,13 +80,19 @@ export default function AdminUsers() {
               {data.items.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
-                    <Link to={`/admin/users/${user.id}`} className="font-medium text-primary hover:underline">
-                      {user.name}
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Link to={`/admin/users/${user.id}`} className="font-medium text-primary hover:underline">
+                        {user.name}
+                      </Link>
+                      {user.isSuperAdmin ? <Badge>super admin</Badge> : user.isAdmin && <Badge>admin</Badge>}
+                    </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{user.kycStatus}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={user.idCheckStatus === "pending" ? "default" : "secondary"}>{user.idCheckStatus}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={user.status === "suspended" ? "destructive" : "outline"}>{user.status}</Badge>
@@ -81,12 +102,14 @@ export default function AdminUsers() {
                     <div className="flex gap-2">
                       {user.kycStatus !== "verified" && (
                         <Button size="sm" onClick={() => handleVerify(user.id)}>
-                          Verify
+                          Verify phone
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => handleToggle(user.id, user.status)}>
-                        {user.status === "suspended" ? "Reinstate" : "Suspend"}
-                      </Button>
+                      {me && canManageAccount(me, user) && (
+                        <Button size="sm" variant="outline" onClick={() => handleToggle(user.id, user.status)}>
+                          {user.status === "suspended" ? "Reinstate" : "Suspend"}
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

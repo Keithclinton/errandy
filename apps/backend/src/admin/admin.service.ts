@@ -1,12 +1,17 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PrismaService } from "../prisma/prisma.service";
-import { ListingStatus, Prisma, ReportStatus, UserStatus } from "@prisma/client";
+import { KycStatus, ListingStatus, Prisma, ReportStatus, UserStatus } from "@prisma/client";
 import { QueryUsersDto } from "./dto/query-users.dto";
 import { ResolveReportDto } from "./dto/resolve-report.dto";
 import { SetKycStatusDto } from "./dto/set-kyc-status.dto";
 import { EVENTS, ReportResolvedEvent } from "../common/events/domain-events";
 import { UsersService } from "../users/users.service";
+import { AuthUser } from "../common/decorators/current-user.decorator";
+import { withoutSecrets } from "../common/without-secrets";
+
+type AccountAction = "suspend" | "reinstate" | "delete";
+const ACTION_PAST: Record<AccountAction, string> = { suspend: "suspended", reinstate: "reinstated", delete: "deleted" };
 
 @Injectable()
 export class AdminService {
@@ -16,13 +21,30 @@ export class AdminService {
     private readonly usersService: UsersService,
   ) {}
 
+  /**
+   * Only the super admin may suspend, reinstate or delete an admin, and no one can do that
+   * to the super admin or to their own account from here.
+   */
+  private async assertCanManage(actor: AuthUser, targetId: string, action: AccountAction) {
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetId },
+      select: { id: true, isAdmin: true, isSuperAdmin: true },
+    });
+    if (!target) throw new NotFoundException("User not found");
+    if (target.id === actor.id) throw new BadRequestException(`You can't ${action} your own account from here`);
+    if (target.isSuperAdmin) throw new ForbiddenException(`The super admin account can't be ${ACTION_PAST[action]}`);
+    if (target.isAdmin && !actor.isSuperAdmin) {
+      throw new ForbiddenException(`Only the super admin can ${action} an admin account`);
+    }
+  }
+
   async searchUsers(query: QueryUsersDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const where: Prisma.UserWhereInput = query.search
       ? { OR: [{ name: { contains: query.search, mode: "insensitive" } }, { email: { contains: query.search, mode: "insensitive" } }] }
       : {};
-    const [items, total] = await Promise.all([
+    const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
         select: {
@@ -30,11 +52,14 @@ export class AdminService {
           email: true,
           name: true,
           kycStatus: true,
+          idVerifiedAt: true,
           status: true,
           isAdmin: true,
+          isSuperAdmin: true,
           ratingAvg: true,
           ratingCount: true,
           createdAt: true,
+          idVerifications: { orderBy: { createdAt: "desc" }, take: 1, select: { status: true } },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
@@ -42,6 +67,10 @@ export class AdminService {
       }),
       this.prisma.user.count({ where }),
     ]);
+    const items = users.map(({ idVerifications, ...user }) => ({
+      ...user,
+      idCheckStatus: user.idVerifiedAt ? KycStatus.verified : (idVerifications[0]?.status ?? KycStatus.none),
+    }));
     return { items, total, page, limit };
   }
 
@@ -52,6 +81,20 @@ export class AdminService {
         listings: true,
         bids: true,
         kycVerifications: true,
+        idVerifications: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            documentType: true,
+            fullName: true,
+            idNumber: true,
+            status: true,
+            rejectionReason: true,
+            createdAt: true,
+            reviewedAt: true,
+            reviewedBy: { select: { id: true, name: true } },
+          },
+        },
         reportsFiled: true,
       },
     });
@@ -60,16 +103,32 @@ export class AdminService {
     return safe;
   }
 
-  async suspendUser(userId: string) {
+  async suspendUser(actor: AuthUser, userId: string) {
+    await this.assertCanManage(actor, userId, "suspend");
     const user = await this.prisma.user.update({ where: { id: userId }, data: { status: UserStatus.suspended } });
     const { passwordHash, refreshTokenHash, passwordResetTokenHash, ...safe } = user;
     return safe;
   }
 
-  async reinstateUser(userId: string) {
+  async reinstateUser(actor: AuthUser, userId: string) {
+    await this.assertCanManage(actor, userId, "reinstate");
     const user = await this.prisma.user.update({ where: { id: userId }, data: { status: UserStatus.active } });
     const { passwordHash, refreshTokenHash, passwordResetTokenHash, ...safe } = user;
     return safe;
+  }
+
+  /** Super admin only (enforced by the controller's guard too). */
+  async setAdminAccess(actor: AuthUser, userId: string, isAdmin: boolean) {
+    if (!actor.isSuperAdmin) throw new ForbiddenException("Only the super admin can make or remove admins");
+    const target = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!target) throw new NotFoundException("User not found");
+    if (target.id === actor.id) throw new BadRequestException("You can't change your own admin access");
+    if (target.isSuperAdmin) throw new ForbiddenException("The super admin's access can't be changed");
+    if (isAdmin && target.status === UserStatus.suspended) {
+      throw new BadRequestException("Reinstate this account before making it an admin");
+    }
+    const user = await this.prisma.user.update({ where: { id: userId }, data: { isAdmin } });
+    return withoutSecrets(user);
   }
 
   /**
@@ -127,7 +186,8 @@ export class AdminService {
   }
 
   /** Hard-deletes a user and everything tied to them — same cascade a user triggers deleting their own account. */
-  async deleteUser(userId: string) {
+  async deleteUser(actor: AuthUser, userId: string) {
+    await this.assertCanManage(actor, userId, "delete");
     return this.usersService.deleteAccount(userId);
   }
 }
