@@ -1,0 +1,49 @@
+# Run from the Actions tab: "Load test" → Run workflow. Before running, raise the API's per-IP
+# limit on the server, and remove it afterwards (see deploy/cpanel/README.md, "Load testing").
+name: Load test
+
+on:
+  workflow_dispatch:
+    inputs:
+      users:
+        description: Simultaneous users
+        required: true
+        default: "100"
+      minutes:
+        description: Minutes at full load
+        required: true
+        default: "3"
+
+permissions:
+  contents: read
+
+jobs:
+  load:
+    name: Runner ${{ matrix.runner }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [1, 2, 3, 4] # four machines, four addresses
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run the test
+        env:
+          USERS: ${{ inputs.users }}
+          SHARE: "0.25"
+          HOLD: ${{ inputs.minutes }}m
+        run: k6 run --summary-export summary.json deploy/loadtest/errandspot.js
+
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-${{ inputs.users }}-runner-${{ matrix.runner }}
+          path: summary.json
+          if-no-files-found: ignore

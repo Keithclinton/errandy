@@ -92,6 +92,26 @@ LD_LIBRARY_PATH=~/pgsql18/lib ~/pgsql18/bin/pg_restore --no-owner --no-privilege
   place: `~/errandspot/{npm-install,migrate,trial}.log`
 - Health: `https://errandspot.com/api/health` (add `?db=1` to include the database)
 
+## Load testing
+
+`deploy/loadtest/errandspot.js` (k6) simulates people using the site at once: half browsing signed
+out, half signed in with the app open. Run it from GitHub (Actions → **Load test** → Run workflow),
+which spreads it over 4 runners. Don't run it from your own connection: the host's firewall may
+block your address, cPanel and SSH included. The test makes its own throwaway accounts.
+
+```sh
+scp deploy/loadtest/data.js errandsp@HOST:~/loadtest-data.js
+ssh errandsp@HOST
+cd ~/errandspot && node ~/loadtest-data.js seed               # 40 test listings, so pages have data
+echo 'THROTTLE_LIMIT_PER_MINUTE=1000000' >> .env && touch tmp/restart.txt
+#   ... run the workflow, once per number of users ...
+sed -i '/^THROTTLE_LIMIT_PER_MINUTE=/d' .env && touch tmp/restart.txt   # never leave it raised
+node ~/loadtest-data.js cleanup                               # test listings and accounts
+```
+
+(After `touch tmp/restart.txt`, check `/api/health` shows the app restarted; if LiteSpeed missed
+it, `pkill -f '^lsnode:/home/errandsp/errandspot/'` and the next request starts it.)
+
 ## Setting up a new server
 
 1. In cPanel: **SSH Access** → import or generate a key and authorize it.

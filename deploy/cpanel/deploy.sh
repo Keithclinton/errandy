@@ -36,6 +36,7 @@ LOG="$RELEASES/deploy.log"
 export PATH="$NODE_BIN:$PATH"
 export TOKIO_WORKER_THREADS=2 # see server.js
 export NPM_CONFIG_UPDATE_NOTIFIER=false NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false
+export PRISMA_HIDE_UPDATE_MESSAGE=1
 
 mkdir -p "$RELEASES"
 TRIAL_PID=""
@@ -166,7 +167,8 @@ deploy() {
     die "npm ci failed: $(tail -c 600 "$new/npm-install.log")"
   mv "$new/node_modules" "$new/.modules" && ln -s .modules "$new/node_modules" || die "couldn't set up node_modules"
 
-  if ! diff -rq "$APP/prisma/migrations" "$new/prisma/migrations" >/dev/null 2>&1; then
+  # (Builds made on Windows have CRLF line endings, CI's have LF: that isn't a change.)
+  if ! diff -rq --strip-trailing-cr "$APP/prisma/migrations" "$new/prisma/migrations" >/dev/null 2>&1; then
     log "this version has database changes: backing up the database first"
     bash "$new/backup.sh" "before-$id" || die "the database backup failed, so nothing was changed"
   fi
