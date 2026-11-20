@@ -1,6 +1,6 @@
 // Test data for a load test. Run on the server, from the app folder so its packages and .env load:
-//   cd ~/errandspot && node ~/loadtest-data.js seed      40 open listings by a "Load test" user
-//   cd ~/errandspot && node ~/loadtest-data.js cleanup   removes them and the accounts the test made
+//   cd ~/errandspot && ~/nodevenv/errandspot/22/bin/node ~/loadtest-data.js seed      40 open listings by a "Load test" user
+//   cd ~/errandspot && ~/nodevenv/errandspot/22/bin/node ~/loadtest-data.js cleanup   removes them and the accounts the test made
 // Everything here uses an @errandspot.invalid email address (a domain that can't exist), and
 // cleanup removes only such accounts. It deletes them directly rather than as the app does, so no
 // "recently deleted" block is left on the made-up phone numbers.

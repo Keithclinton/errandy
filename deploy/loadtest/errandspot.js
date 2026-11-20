@@ -8,9 +8,11 @@ import { check, sleep } from "k6";
 
 const BASE = __ENV.BASE_URL || "https://errandspot.com";
 const USERS = Number(__ENV.USERS || 100); // across all runners
-const SHARE = Number(__ENV.SHARE || 1); // this runner's part of them
+const RUNNERS = Number(__ENV.RUNNERS || 1);
 const HOLD = __ENV.HOLD || "3m";
-const half = Math.max(1, Math.round((USERS * SHARE) / 2));
+const half = Math.max(1, Math.round(USERS / RUNNERS / 2));
+// Status codes counted in the summary, to tell the app's errors from the host's limits.
+const STATUSES = ["0", "403", "429", "500", "502", "503", "504", "508"];
 
 const ramp = (target) => [
   { duration: "1m", target },
@@ -33,11 +35,20 @@ export const options = {
     "http_req_duration{page:listing}": ["p(95)<60000"],
     "http_req_duration{page:profile}": ["p(95)<60000"],
     "http_req_duration{page:poll}": ["p(95)<60000"],
+    ...Object.fromEntries(STATUSES.map((s) => [`http_reqs{status:${s}}`, ["count>=0"]])),
   },
   summaryTrendStats: ["avg", "med", "p(90)", "p(95)", "max"],
 };
 
-const get = (path, page, params = {}) => http.get(`${BASE}${path}`, { ...params, tags: { page } });
+let reported = 0;
+const get = (path, page, params = {}) => {
+  const res = http.get(`${BASE}${path}`, { ...params, tags: { page } });
+  if ((res.status === 0 || res.status >= 400) && reported++ < 3) {
+    // status 0 is a network error: error_code tells which (1211 dial timeout, 1220 refused...).
+    console.warn(`${page}: ${res.status} ${res.error_code || ""} ${String(res.body || res.error).slice(0, 160)}`);
+  }
+  return res;
+};
 const json = (res) => {
   try {
     return res.json();

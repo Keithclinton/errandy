@@ -1,5 +1,7 @@
 # Run from the Actions tab: "Load test" → Run workflow. Before running, raise the API's per-IP
 # limit on the server, and remove it afterwards (see deploy/cpanel/README.md, "Load testing").
+# Each runner is a separate machine with its own address. The host limits connections per
+# address, so keep it to about 50 users per runner (real visitors come from many addresses).
 name: Load test
 
 on:
@@ -9,6 +11,12 @@ on:
         description: Simultaneous users
         required: true
         default: "100"
+      runners:
+        description: Machines to spread them over (about 50 users each)
+        required: true
+        default: "4"
+        type: choice
+        options: ["2", "4", "10", "20"]
       minutes:
         description: Minutes at full load
         required: true
@@ -25,7 +33,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [1, 2, 3, 4] # four machines, four addresses
+        runner: >-
+          ${{ fromJSON(inputs.runners == '20' && '[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]'
+          || inputs.runners == '10' && '[1,2,3,4,5,6,7,8,9,10]'
+          || inputs.runners == '2' && '[1,2]' || '[1,2,3,4]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -36,7 +47,7 @@ jobs:
       - name: Run the test
         env:
           USERS: ${{ inputs.users }}
-          SHARE: "0.25"
+          RUNNERS: ${{ inputs.runners }}
           HOLD: ${{ inputs.minutes }}m
         run: k6 run --summary-export summary.json deploy/loadtest/errandspot.js
 

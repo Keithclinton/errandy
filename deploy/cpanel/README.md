@@ -102,11 +102,11 @@ block your address, cPanel and SSH included. The test makes its own throwaway ac
 ```sh
 scp deploy/loadtest/data.js errandsp@HOST:~/loadtest-data.js
 ssh errandsp@HOST
-cd ~/errandspot && node ~/loadtest-data.js seed               # 40 test listings, so pages have data
+cd ~/errandspot && ~/nodevenv/errandspot/22/bin/node ~/loadtest-data.js seed               # 40 test listings, so pages have data
 echo 'THROTTLE_LIMIT_PER_MINUTE=1000000' >> .env && touch tmp/restart.txt
 #   ... run the workflow, once per number of users ...
 sed -i '/^THROTTLE_LIMIT_PER_MINUTE=/d' .env && touch tmp/restart.txt   # never leave it raised
-node ~/loadtest-data.js cleanup                               # test listings and accounts
+~/nodevenv/errandspot/22/bin/node ~/loadtest-data.js cleanup   # test listings and accounts
 ```
 
 (After `touch tmp/restart.txt`, check `/api/health` shows the app restarted; if LiteSpeed missed
