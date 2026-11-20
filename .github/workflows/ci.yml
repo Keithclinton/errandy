@@ -12,7 +12,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18 # the version production (Neon) runs
         env:
           POSTGRES_USER: errandy
           POSTGRES_PASSWORD: errandy
@@ -46,3 +46,62 @@ jobs:
 
       - name: Run backend e2e tests
         run: npm run test:e2e --workspace=@errandy/backend
+
+  # The cPanel server installs what this publishes: every few minutes it checks the "cpanel-build"
+  # release, and installs a new build with a trial run and automatic rollback (see
+  # deploy/cpanel/deploy.sh). GitHub holds no key to the server.
+  publish:
+    name: Publish for cPanel
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: cpanel-publish
+      cancel-in-progress: false
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the cPanel package
+        run: node deploy/cpanel/build.mjs
+
+      - name: Publish it
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: deploy/cpanel/out
+        run: |
+          id=$(node -p 'require("./errandspot/release.json").id')
+          sha=$(sha256sum errandspot.tgz | cut -d' ' -f1)
+          printf '{"id":"%s","commit":"%s","sha256":"%s"}\n' "$id" "$GITHUB_SHA" "$sha" > release.json
+          gh release view cpanel-build > /dev/null 2>&1 || gh release create cpanel-build --prerelease \
+            --target "$GITHUB_SHA" --title "cPanel build" \
+            --notes "The latest tested build, which the cPanel server installs by itself. Replaced on every push to main."
+          # The package first: the server only acts on release.json, and checks the package against it.
+          gh release upload cpanel-build errandspot.tgz --clobber
+          gh release upload cpanel-build release.json --clobber
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for errandspot.com to run it
+        env:
+          RELEASE_ID: ${{ steps.publish.outputs.id }}
+        run: |
+          for attempt in $(seq 1 60); do
+            got=$(curl -fsS -m 15 https://errandspot.com/api/health | sed -n 's/.*"release":"\([^"]*\)".*/\1/p' || true)
+            if [ "$got" = "$RELEASE_ID" ]; then echo "errandspot.com is running $got"; exit 0; fi
+            sleep 15
+          done
+          echo "::error::After 15 minutes errandspot.com still runs ${got:-nothing it can name}, not $RELEASE_ID. The server rolls back a build that fails its checks: see ~/releases/deploy.log there."
+          exit 1

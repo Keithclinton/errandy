@@ -1,0 +1,38 @@
+# Checks errandspot.com every 10 minutes. A failed run means the site was down for three checks
+# in a row, and GitHub emails whoever last changed this schedule. (GitHub can start scheduled runs
+# late, and pauses them after 60 days without commits; re-enable from the Actions tab.)
+name: Uptime
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check errandspot.com
+        run: |
+          # The database only on the hour's first check: checking it every time would keep Neon's
+          # compute awake around the clock and use up the free plan's hours.
+          query=""
+          if [ "$(date -u +%M)" -lt 10 ]; then query="?db=1"; fi
+          check() {
+            curl -fsS -m 20 -o /dev/null -w "home page %{http_code} in %{time_total}s\n" https://errandspot.com/ &&
+              curl -fsS -m 20 -w "\n" "https://errandspot.com/api/health$query"
+          }
+          for attempt in 1 2 3; do
+            if check; then exit 0; fi
+            echo "::warning::check $attempt failed"
+            [ "$attempt" -lt 3 ] && sleep 45
+          done
+          echo "::error::errandspot.com is down: three checks in a row failed"
+          exit 1

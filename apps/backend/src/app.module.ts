@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
@@ -18,12 +18,20 @@ import { AdminModule } from "./admin/admin.module";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { EmailModule } from "./email/email.module";
 import { TokensModule } from "./tokens/tokens.module";
+import { HealthModule } from "./health/health.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
+    // Requests per minute per IP. THROTTLE_LIMIT_PER_MINUTE exists so a load test, which comes
+    // from one IP, can stand in for many users; leave it unset otherwise.
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        { ttl: 60_000, limit: Number(config.get("THROTTLE_LIMIT_PER_MINUTE")) || 100 },
+      ],
+    }),
     EventEmitterModule.forRoot(),
     PrismaModule,
     AccountBlocksModule,
@@ -40,6 +48,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
     AdminModule,
     AnalyticsModule,
     TokensModule,
+    HealthModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

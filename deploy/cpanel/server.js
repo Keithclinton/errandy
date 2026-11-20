@@ -2,11 +2,27 @@
 // Startup file for cPanel's "Setup Node.js App". One Node process serves the React site and the
 // API under /api: the same URLs as on Vercel, so the M-Pesa and Google callback URLs stay valid.
 // Built into a deployable folder by build.mjs next to this file.
+const fs = require("fs");
 const path = require("path");
 
 // cPanel may start the app from another directory; .env and prisma/ are read relative to this one.
 process.chdir(__dirname);
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
+// Prisma's engine starts a worker thread per CPU core it can see (24 on the server), but the
+// hosting account may run only 100 processes and threads in all, and gets one core anyway.
+// At 37 threads a process, a second copy during a restart nearly used the allowance up.
+process.env.TOKIO_WORKER_THREADS = process.env.TOKIO_WORKER_THREADS || "2";
+// Which build this is (written by build.mjs); /api/health reports it so a deploy can tell the
+// new version is the one answering.
+process.env.RELEASE_ID = readReleaseId();
+
+function readReleaseId() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, "release.json"), "utf8")).id;
+  } catch {
+    return "unknown";
+  }
+}
 
 const express = require("express");
 const { createApp } = require("./dist/create-app");
@@ -54,7 +70,10 @@ createApp(api)
   .then((app) => app.init())
   .then(() => {
     const port = process.env.PORT || 3000;
-    site.listen(port, () => console.log(`Errandspot is running (port ${port})`));
+    // deploy.sh starts a trial copy of a new version with LISTEN_HOST=127.0.0.1 before switching
+    // to it. cPanel's own start passes only PORT, so that path is left exactly as it was.
+    const listenArgs = process.env.LISTEN_HOST ? [port, process.env.LISTEN_HOST] : [port];
+    site.listen(...listenArgs, () => console.log(`Errandspot ${process.env.RELEASE_ID} is running (port ${port})`));
   })
   .catch((err) => {
     console.error("Errandspot failed to start:", err);

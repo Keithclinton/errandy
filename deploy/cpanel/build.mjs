@@ -1,6 +1,7 @@
-// Builds the folder and zip to upload to cPanel's "Setup Node.js App". See README.md here.
+// Builds the package that deploy.sh installs on the cPanel server. See README.md here.
 // Usage: node deploy/cpanel/build.mjs [--env <file from `vercel env pull`>]
-// With --env, the zip includes the production .env, so it holds secrets: keep it private.
+// Normal updates don't need --env: the server keeps its own .env. With --env (only for setting up
+// a new server), the package includes the production .env, so it holds secrets: keep it private.
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import fs from "node:fs";
@@ -56,7 +57,18 @@ fs.copyFileSync(path.join(BACKEND, "prisma/schema.prisma"), path.join(APP, "pris
 fs.cpSync(path.join(BACKEND, "prisma/migrations"), path.join(APP, "prisma/migrations"), { recursive: true });
 fs.copyFileSync(path.join(HERE, "server.js"), path.join(APP, "server.js"));
 // bash on the server fails on Windows line endings.
-fs.writeFileSync(path.join(APP, "cron.sh"), fs.readFileSync(path.join(HERE, "cron.sh"), "utf8").replace(/\r\n/g, "\n"));
+for (const script of ["cron.sh", "backup.sh", "deploy.sh"]) {
+  fs.writeFileSync(path.join(APP, script), fs.readFileSync(path.join(HERE, script), "utf8").replace(/\r\n/g, "\n"));
+}
+
+// Which build this is: deploy.sh and /api/health use the id to tell versions apart.
+const git = (...args) => spawnSync("git", args, { cwd: ROOT, encoding: "utf8" }).stdout.trim();
+const commit = process.env.GITHUB_SHA || git("rev-parse", "HEAD");
+const uncommitted = !process.env.GITHUB_SHA && git("status", "--porcelain", "--", "apps", "deploy", "vercel.json") !== "";
+const builtAt = new Date();
+const stamp = builtAt.toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 13); // 20261120-0830
+const release = { id: `${stamp}-${commit.slice(0, 7)}${uncommitted ? "-local" : ""}`, commit, builtAt: builtAt.toISOString() };
+fs.writeFileSync(path.join(APP, "release.json"), `${JSON.stringify(release, null, 2)}\n`);
 
 // The page headers stay defined in one place: vercel.json.
 const vercel = JSON.parse(fs.readFileSync(path.join(ROOT, "vercel.json"), "utf8"));
@@ -106,9 +118,10 @@ if (envIndex > -1) {
   console.log(`.env written with ${lines.length - 1} settings. Not set in production: ${missing.join(", ") || "none"}`);
 }
 
-// 4. Zip it. Windows' own tar writes forward-slash paths, which cPanel's extractor needs.
-const zip = path.join(OUT, "errandspot.zip");
-fs.rmSync(zip, { force: true });
-if (process.platform === "win32") run("C:\\Windows\\System32\\tar.exe", ["-a", "-cf", "errandspot.zip", "errandspot"], { cwd: OUT });
-else run("zip", ["-qr", "errandspot.zip", "errandspot"], { cwd: OUT });
-console.log(`\nReady: ${zip}`);
+// 4. Pack it. On Windows this is the system's own bsdtar, not Git Bash's tar, which would read
+// "C:" as a remote host.
+const pkg = path.join(OUT, "errandspot.tgz");
+fs.rmSync(pkg, { force: true });
+const tar = process.platform === "win32" ? "C:\\Windows\\System32\\tar.exe" : "tar";
+run(tar, ["-czf", "errandspot.tgz", "errandspot"], { cwd: OUT });
+console.log(`\nReady: ${pkg} (release ${release.id})`);
