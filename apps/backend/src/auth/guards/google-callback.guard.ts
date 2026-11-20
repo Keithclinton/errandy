@@ -1,4 +1,4 @@
-import { ExecutionContext, HttpException, Injectable } from "@nestjs/common";
+import { ExecutionContext, HttpException, Injectable, Logger } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 
 export const GOOGLE_SIGN_IN_FAILED = "Google sign-in failed. Please try again.";
@@ -10,13 +10,33 @@ export const GOOGLE_SIGN_IN_FAILED = "Google sign-in failed. Please try again.";
  */
 @Injectable()
 export class GoogleCallbackGuard extends AuthGuard("google") {
+  private readonly logger = new Logger("GoogleSignIn");
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleRequest<TUser = any>(err: unknown, user: TUser | false, _info: unknown, context: ExecutionContext): TUser {
+  handleRequest<TUser = any>(err: unknown, user: TUser | false, info: unknown, context: ExecutionContext): TUser {
     if (err || !user) {
       const request = context.switchToHttp().getRequest();
-      request.googleAuthError = err instanceof HttpException ? err.message : GOOGLE_SIGN_IN_FAILED;
+      if (err instanceof HttpException) {
+        request.googleAuthError = err.message;
+      } else {
+        request.googleAuthError = GOOGLE_SIGN_IN_FAILED;
+        // The person only sees the generic message, so record why. These errors carry Google's
+        // error code and description, never tokens.
+        this.logger.error(`Google sign-in failed: ${describe(err, info)}`);
+      }
       return null as TUser;
     }
     return user;
   }
+}
+
+function describe(err: unknown, info: unknown): string {
+  if (err instanceof Error) {
+    const details = err as Error & { code?: string; oauthError?: { statusCode?: number; data?: unknown } };
+    const google = details.oauthError ? ` (Google answered ${details.oauthError.statusCode}: ${String(details.oauthError.data).slice(0, 200)})` : "";
+    return `${err.name}: ${err.message}${details.code ? ` [${details.code}]` : ""}${google}`;
+  }
+  // No error and no user: Google sent the person back without signing in, e.g. they cancelled.
+  const message = (info as { message?: string } | undefined)?.message;
+  return `no account returned${message ? `: ${message}` : ""}`;
 }
