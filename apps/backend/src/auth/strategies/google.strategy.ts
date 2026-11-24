@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
-import { Strategy, VerifyCallback, Profile } from "passport-google-oauth20";
+import { Strategy, Profile } from "passport-google-oauth20";
 import { AuthService } from "../auth.service";
+import { AuthUser } from "../../common/decorators/current-user.decorator";
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
@@ -20,17 +21,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
     });
   }
 
-  async validate(
-    _accessToken: string,
-    _refreshToken: string,
-    profile: Profile,
-    done: VerifyCallback,
-  ): Promise<void> {
-    try {
-      const user = await this.authService.validateGoogleUser(profile);
-      done(null, user);
-    } catch (err) {
-      done(err as Error, false);
-    }
+  // Nest passes passport whatever this returns, or the error it throws. It must not also call
+  // passport's `done` itself: that reported every sign-in twice, and the second, empty report
+  // turned each one into "Google sign-in failed".
+  async validate(_accessToken: string, _refreshToken: string, profile: Profile): Promise<AuthUser> {
+    return this.authService.validateGoogleUser(profile);
   }
 }

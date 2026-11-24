@@ -2,6 +2,7 @@ import { ExecutionContext, HttpException, Injectable, Logger } from "@nestjs/com
 import { AuthGuard } from "@nestjs/passport";
 
 export const GOOGLE_SIGN_IN_FAILED = "Google sign-in failed. Please try again.";
+const HANDLED = Symbol("googleSignInHandled");
 
 /**
  * Google's callback is a full-page browser redirect, so a thrown error would leave the person
@@ -14,8 +15,12 @@ export class GoogleCallbackGuard extends AuthGuard("google") {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleRequest<TUser = any>(err: unknown, user: TUser | false, info: unknown, context: ExecutionContext): TUser {
+    const request = context.switchToHttp().getRequest();
+    // Passport should report one result per sign-in. If something reports again, the first result
+    // stands: a stray empty report once turned every successful sign-in into a failure.
+    if (request[HANDLED]) return null as TUser;
+    request[HANDLED] = true;
     if (err || !user) {
-      const request = context.switchToHttp().getRequest();
       if (err instanceof HttpException) {
         request.googleAuthError = err.message;
       } else {

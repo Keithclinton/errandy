@@ -155,15 +155,27 @@ describe("Self-service account deletion (e2e)", () => {
   });
 
   it("sends a failed Google sign-in back to the app with the reason instead of raw JSON", () => {
-    const req: { googleAuthError?: string } = {};
-    const context = { switchToHttp: () => ({ getRequest: () => req }) } as unknown as ExecutionContext;
     const guard = new GoogleCallbackGuard();
+    const signIn = () => {
+      const req: { googleAuthError?: string } = {};
+      const context = { switchToHttp: () => ({ getRequest: () => req }) } as unknown as ExecutionContext;
+      return { req, context };
+    };
 
-    expect(guard.handleRequest(new ForbiddenException("Blocked for a while"), false, undefined, context)).toBeNull();
-    expect(req.googleAuthError).toBe("Blocked for a while");
+    const refused = signIn();
+    expect(guard.handleRequest(new ForbiddenException("Blocked for a while"), false, undefined, refused.context)).toBeNull();
+    expect(refused.req.googleAuthError).toBe("Blocked for a while");
 
-    expect(guard.handleRequest(null, false, undefined, context)).toBeNull();
-    expect(req.googleAuthError).toBe("Google sign-in failed. Please try again.");
+    const cancelled = signIn();
+    expect(guard.handleRequest(null, false, undefined, cancelled.context)).toBeNull();
+    expect(cancelled.req.googleAuthError).toBe("Google sign-in failed. Please try again.");
+
+    // A second report for the same sign-in doesn't undo the first.
+    const succeeded = signIn();
+    const user = { id: "u1" };
+    expect(guard.handleRequest(null, user, undefined, succeeded.context)).toBe(user);
+    guard.handleRequest(null, false, undefined, succeeded.context);
+    expect(succeeded.req.googleAuthError).toBeUndefined();
   });
 
   it("doesn't let admins delete their own account", async () => {
