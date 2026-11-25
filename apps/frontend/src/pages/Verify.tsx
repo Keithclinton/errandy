@@ -51,6 +51,15 @@ export default function Verify() {
     }
   };
 
+  const handleResend = async () => {
+    try {
+      await requestOtp.mutateAsync(phone);
+      toast.success("New code sent! Check your SMS.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Couldn't resend the code.");
+    }
+  };
+
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div className="text-center">
@@ -151,13 +160,19 @@ export default function Verify() {
               <Button type="submit" className="w-full" disabled={verifyOtp.isPending || code.length !== 6}>
                 {verifyOtp.isPending ? "Verifying…" : "Verify"}
               </Button>
-              <button
-                type="button"
-                onClick={() => setStep("phone")}
-                className="w-full text-center text-sm text-muted-foreground hover:text-primary hover:underline"
-              >
-                Use a different number
-              </button>
+              <div className="space-y-2 border-t pt-4 text-center">
+                <p className="text-sm text-muted-foreground">Didn't get it? It can take a minute to arrive.</p>
+                <Button type="button" variant="outline" className="w-full" onClick={handleResend} disabled={requestOtp.isPending}>
+                  {requestOtp.isPending ? "Sending…" : "Resend code"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setStep("phone")}
+                  className="text-sm text-muted-foreground hover:text-primary hover:underline"
+                >
+                  Use a different number
+                </button>
+              </div>
             </form>
           )}
         </CardContent>

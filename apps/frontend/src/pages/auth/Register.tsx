@@ -104,14 +104,12 @@ export default function Register() {
           <Button type="submit" className="w-full" disabled={verifyOtp.isPending || code.length !== 6}>
             {verifyOtp.isPending ? "Verifying…" : "Verify"}
           </Button>
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={requestOtp.isPending}
-            className="w-full text-center text-sm text-muted-foreground hover:text-primary hover:underline"
-          >
-            {requestOtp.isPending ? "Sending…" : "Resend code"}
-          </button>
+          <div className="space-y-2 border-t pt-4 text-center">
+            <p className="text-sm text-muted-foreground">Didn't get it? It can take a minute to arrive.</p>
+            <Button type="button" variant="outline" className="w-full" onClick={handleResend} disabled={requestOtp.isPending}>
+              {requestOtp.isPending ? "Sending…" : "Resend code"}
+            </Button>
+          </div>
         </form>
       </AuthLayout>
     );
