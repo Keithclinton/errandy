@@ -8,6 +8,7 @@ import { AuthUser } from "../../common/decorators/current-user.decorator";
 
 interface AccessTokenPayload {
   sub: string;
+  purpose?: string;
 }
 
 @Injectable()
@@ -24,6 +25,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: AccessTokenPayload): Promise<AuthUser> {
+    // Password-reset links are signed with the same secret, but only reset the password.
+    if (payload.purpose !== undefined) {
+      throw new UnauthorizedException();
+    }
     const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
     if (!user || user.status === UserStatus.suspended) {
       throw new UnauthorizedException();

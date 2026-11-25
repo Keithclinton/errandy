@@ -1,6 +1,7 @@
 import { INestApplication } from "@nestjs/common";
 import * as request from "supertest";
 import { PrismaClient } from "@prisma/client";
+import * as jwt from "jsonwebtoken";
 import { createTestApp, cleanDatabase, nextTestPhone, FakeSmsService } from "./test-utils";
 
 describe("Auth (e2e)", () => {
@@ -116,5 +117,17 @@ describe("Auth (e2e)", () => {
       .post("/auth/refresh")
       .send({ refreshToken: refreshRes.body.refreshToken })
       .expect(401);
+  });
+
+  it("doesn't accept a password-reset link as a sign-in", async () => {
+    const res = await request(app.getHttpServer())
+      .post("/auth/register")
+      .send({ email: "reset@test.com", password: "password123", name: "R", phone: nextTestPhone(), acceptedTerms: true, termsVersion: "v1" })
+      .expect(201);
+    // What forgot-password emails: signed with the same secret as sign-ins, an hour long.
+    const resetToken = jwt.sign({ sub: res.body.user.id, purpose: "password-reset" }, process.env.JWT_ACCESS_SECRET!, { expiresIn: "1h" });
+
+    await request(app.getHttpServer()).get("/tokens/balance").set("Authorization", `Bearer ${res.body.accessToken}`).expect(200);
+    await request(app.getHttpServer()).get("/tokens/balance").set("Authorization", `Bearer ${resetToken}`).expect(401);
   });
 });
