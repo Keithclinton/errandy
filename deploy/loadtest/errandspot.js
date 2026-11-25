@@ -1,8 +1,9 @@
 // k6 load test for errandspot.com: USERS people using the site at the same time, half of them
 // browsing signed out and half signed in with the app open (which polls every 15 seconds).
 // Run it with .github/workflows/load-test.yml, which spreads it over several GitHub runners. From
-// one home connection the host's firewall would likely block the address, and the API's limit of
-// 100 requests a minute per IP has to be raised on the server for the test (see README.md).
+// one home connection the host's firewall would likely block the address. The API's limits have to
+// be raised on the server for the test (see README.md): each runner's visitors share one address,
+// and its signed-in half shares one account.
 import http from "k6/http";
 import { check, sleep } from "k6";
 

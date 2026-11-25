@@ -4,7 +4,6 @@ import { SkipThrottle, Throttle } from "@nestjs/throttler";
 import { Public } from "../common/decorators/public.decorator";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
 import { CronGuard } from "../common/guards/cron.guard";
-import { trackByAccount } from "../common/track-by-account";
 import { TokensService } from "./tokens.service";
 import { InitiatePurchaseDto } from "./dto/initiate-purchase.dto";
 
@@ -30,7 +29,8 @@ export class TokensController {
   }
 
   // Each call pops an M-Pesa prompt on someone's phone, so keep it well short of spammable.
-  @Throttle({ default: { limit: 5, ttl: 60_000, getTracker: trackByAccount } })
+  // Counted per account, like every signed-in request (see rate-limits.ts).
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("purchases/initiate")
   initiatePurchase(@CurrentUser() user: AuthUser, @Body() dto: InitiatePurchaseDto) {
     return this.tokensService.initiatePurchase(user.id, dto);

@@ -2,8 +2,10 @@ import { Body, Controller, Get, Patch, Post, Req, Res, UseGuards } from "@nestjs
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { AuthGuard } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
+import { Throttle } from "@nestjs/throttler";
 import type { Request, Response } from "express";
 import { Public } from "../common/decorators/public.decorator";
+import { SIGN_IN_ATTEMPTS_LIMIT } from "../common/rate-limits";
 import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
@@ -23,12 +25,14 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle(SIGN_IN_ATTEMPTS_LIMIT)
   @Post("register")
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Public()
+  @Throttle(SIGN_IN_ATTEMPTS_LIMIT)
   @Post("login")
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -47,12 +51,14 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle(SIGN_IN_ATTEMPTS_LIMIT)
   @Post("forgot-password")
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
 
   @Public()
+  @Throttle(SIGN_IN_ATTEMPTS_LIMIT)
   @Post("reset-password")
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
