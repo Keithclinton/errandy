@@ -1,27 +1,33 @@
 #!/bin/bash
-# Backs up the database into ~/backups/db and keeps 30 days of backups.
-# Run daily by cron, and by deploy.sh before it applies new migrations: backup.sh [label]
-# Restore (into an empty database): see README.md.
+# Backs up the database into ~/backups/db: backup.sh [label]
+#   hourly  (cron, every hour)  kept 2 days
+#   daily   (cron, every night) kept 30 days, and loaded into the off-site copy (below)
+#   other   (deploy.sh passes before-<version> ahead of new migrations) kept 30 days
+# The database runs on this server, so its backups alone wouldn't survive losing the server or
+# the account. The daily one is also loaded into the Neon database in NEON_BACKUP_URL (the app's
+# database before 2026-11-25), which then holds a full working copy, at most a day old.
+# Restore: see README.md.
 set -uo pipefail
 umask 077
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PG="$HOME/pgsql18" # PostgreSQL 18 client tools, installed by hand (see README.md)
 DEST="$HOME/backups/db"
-KEEP_DAYS=30
 LABEL="${1:-daily}"
 mkdir -p "$DEST"
 export LD_LIBRARY_PATH="$PG/lib"
 
+log() { echo "$(date -u +%FT%TZ) $*" >>"$DEST/backup.log"; }
 fail() {
-  echo "$(date -u +%FT%TZ) FAILED $LABEL: $*" >>"$DEST/backup.log"
+  log "FAILED $LABEL: $*"
   echo "Database backup failed: $*" >&2
   exit 1
 }
 
-# The connection comes from DIRECT_URL (pg_dump can't go through Neon's pooler) and is passed in
-# the environment, so the password never shows in a process list.
-settings=$(python3 - "$HERE/.env" <<'PY'
+# Prints `export PG...=` lines for the database in .env setting $1, so the password is passed in
+# the environment and never shows in a process list.
+connection() {
+  python3 - "$HERE/.env" "$1" <<'PY'
 import shlex, sys
 from urllib.parse import parse_qs, unquote, urlsplit
 
@@ -36,7 +42,9 @@ for line in open(sys.argv[1], encoding="utf-8"):
         value = value[1:-1]
     env[key.strip()] = value
 
-url = urlsplit(env.get("DIRECT_URL") or env["DATABASE_URL"])
+if not env.get(sys.argv[2]):
+    sys.exit(3)
+url = urlsplit(env[sys.argv[2]])
 query = parse_qs(url.query)
 for key, value in {
     "PGHOST": url.hostname,
@@ -48,8 +56,12 @@ for key, value in {
 }.items():
     print(f"export {key}={shlex.quote(value)}")
 PY
-) || fail "couldn't read the database settings from .env"
+}
+
+# DIRECT_URL: the app's database without a connection pooler in front.
+settings=$(connection DIRECT_URL) || fail "couldn't read DIRECT_URL from .env"
 eval "$settings"
+live_host=$PGHOST
 
 file="$DEST/errandspot-$(date -u +%Y%m%d-%H%M%S)-$LABEL.dump"
 "$PG/bin/pg_dump" --format=custom --no-owner --no-privileges --file="$file.part" 2>"$DEST/.error" ||
@@ -58,6 +70,31 @@ file="$DEST/errandspot-$(date -u +%Y%m%d-%H%M%S)-$LABEL.dump"
 mv "$file.part" "$file"
 rm -f "$DEST/.error"
 
-find "$DEST" -name 'errandspot-*.dump' -mtime +"$KEEP_DAYS" -delete
+find "$DEST" -name 'errandspot-*-hourly.dump' -mmin +$((48 * 60)) -delete
+find "$DEST" -name 'errandspot-*.dump' -mtime +30 -delete
 find "$DEST" -name '*.part' -mmin +120 -delete
-echo "$(date -u +%FT%TZ) ok $LABEL $(du -h "$file" | cut -f1) $(basename "$file")" >>"$DEST/backup.log"
+log "ok $LABEL $(du -h "$file" | cut -f1) $(basename "$file")"
+
+# The off-site copy, from the daily backup. In one transaction, so if loading fails the copy
+# keeps the previous day's data.
+[ "$LABEL" = daily ] || exit 0
+offsite=$(connection NEON_BACKUP_URL)
+case $? in
+  0) ;;
+  3) exit 0 ;; # not set up
+  *) fail "couldn't read NEON_BACKUP_URL from .env" ;;
+esac
+(
+  eval "$offsite"
+  # If the app has been pointed back at Neon, loading last night's backup into it would undo
+  # everything since.
+  if [ "$PGHOST" = "$live_host" ]; then
+    log "skipped the off-site copy: the app uses that database"
+    exit 0
+  fi
+  "$PG/bin/pg_restore" --clean --if-exists --no-owner --no-privileges --single-transaction \
+    --exit-on-error --dbname="$PGDATABASE" "$file" 2>"$DEST/.error" ||
+    { log "FAILED off-site copy: $(tail -c 400 "$DEST/.error")"; echo "Off-site copy failed" >&2; exit 1; }
+  rm -f "$DEST/.error"
+  log "ok off-site copy loaded into $PGHOST"
+)

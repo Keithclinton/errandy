@@ -7,7 +7,7 @@ SITE=https://errandspot.com
 APP_DIR=$(pwd)
 
 if [ "$1" = "watchdog" ]; then
-  # /api/health without ?db=1 doesn't wake the database, so Neon can still sleep when idle.
+  # Without ?db=1: only whether the app answers. Restarting it wouldn't fix the database.
   healthy() { curl -fsS -m 20 -o /dev/null "$SITE/api/health"; }
   healthy && exit 0
   sleep 30

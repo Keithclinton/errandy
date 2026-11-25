@@ -8,6 +8,12 @@ Live setup (since 2026-11-19): account `errandsp` on 91.204.209.17 (Brixly, UK),
 `~/errandspot`, Node 22. The account may use 1 CPU core, 2 GB of memory, 30 simultaneous
 requests and 100 processes and threads in all.
 
+The database (since 2026-11-25) is the account's own PostgreSQL 13: database
+`errandsp_errandspot`, user `errandsp_app`, reached on localhost and closed to the internet. The
+host's PostgreSQL serves every account on the server and allows 100 connections in all, so the
+app's `DATABASE_URL` ends in `&connection_limit=5`. Before that it was Neon (US), which now holds
+the off-site copy (see Backups).
+
 ## Updating
 
 **Automatically:** push to `main`. CI runs the tests, builds the package and publishes it on the
@@ -43,10 +49,13 @@ add tables and columns; drop or rename them only in a later release.
   `~/errandspot/.modules`, so cPanel's **Restart** button keeps working. Don't press **Run NPM
   Install**: deploys install packages themselves.
 - `~/errandspot/.env`: the settings. Edit it there, then restart (deploys copy it forward).
+  `DATABASE_URL` and `DIRECT_URL` point at the local database, `NEON_BACKUP_URL` at the off-site
+  copy.
 - `~/releases`: previous versions, `deploy.log`, `watchdog.log`.
 - `~/bin/errandspot-deploy`: the deploy script (`deploy.sh`; each deploy refreshes it).
 - `~/pgsql18`: PostgreSQL 18 client tools, unpacked from the PGDG packages for RHEL 9
-  (`postgresql18` and `postgresql18-libs`). The system's are version 13, too old for Neon.
+  (`postgresql18` and `postgresql18-libs`). They work with both the local database (13) and the
+  off-site copy (18); the system's own (13) can't reach the copy.
 - `~/backups/db`: database backups.
 
 **Restarts:** LiteSpeed doesn't always notice `tmp/restart.txt` after the folders are swapped,
@@ -61,29 +70,41 @@ and after a restart it leaves the old process idling, holding part of the 100-pr
 0 6 * * *    cron.sh digest               # unread-messages emails
 */4 * * * *  cron.sh watchdog             # keeps the app awake; restarts it if it stops answering
 */2 * * * *  errandspot-deploy pull       # installs new builds
-30 23 * * *  backup.sh                    # 02:30 in Nairobi
+15 * * * *   backup.sh hourly
+30 23 * * *  backup.sh daily              # 02:30 in Nairobi; also refreshes the off-site copy
 ```
 
 The host adds a random delay of up to a minute to each job and sets `MAILTO=""`. To get an email
 when a backup fails, enter your address under cPanel → Cron Jobs → Cron Email.
 
-The watchdog checks `/api/health` without `?db=1`, so it doesn't wake the database and Neon can
-still suspend when idle (the free plan has limited compute hours). The same goes for the uptime
-check in `.github/workflows/uptime.yml`, which checks the database once an hour.
+The watchdog checks `/api/health` without `?db=1`: it restarts the app when the app stops
+answering, which wouldn't help if the database were the problem.
 
 ## Backups
 
-`backup.sh` writes `~/backups/db/errandspot-<time>-<label>.dump` (pg_dump's custom format) daily
-and before each deploy that brings migrations, checks that the file reads back, and keeps 30 days.
-Results go to `~/backups/db/backup.log`. Photos aren't included: they live in Vercel Blob.
+`backup.sh` writes `~/backups/db/errandspot-<time>-<label>.dump` (pg_dump's custom format) every
+hour, every night and before each deploy that brings migrations, and checks that the file reads
+back. Hourly ones are kept 2 days, the rest 30. Results go to `~/backups/db/backup.log`. Photos
+aren't included: they live in Vercel Blob.
 
-To restore into an empty database (a new Neon database, say), with its connection string in
-`$TARGET_URL`:
+These backups are on the same server as the database, so each night's is also loaded into the
+Neon database in `NEON_BACKUP_URL`: a full working copy, at most a day old, off this server. If the
+server or the account were lost, point `DATABASE_URL` and `DIRECT_URL` (on a new server, or on
+Vercel) at it. The nightly load skips itself when the app uses that database, so it can't
+overwrite live data.
+
+To restore into an empty database on this server (create one in cPanel → PostgreSQL Databases),
+with `PGHOST=localhost PGUSER=... PGPASSWORD=... PGDATABASE=...` set. pg_restore 18 sets
+`transaction_timeout`, which PostgreSQL 13 doesn't have, hence the `sed`:
 
 ```sh
-LD_LIBRARY_PATH=~/pgsql18/lib ~/pgsql18/bin/pg_restore --no-owner --no-privileges \
-  --dbname="$TARGET_URL" ~/backups/db/errandspot-<time>-<label>.dump
+LD_LIBRARY_PATH=~/pgsql18/lib ~/pgsql18/bin/pg_restore --no-owner --no-privileges -f - \
+  ~/backups/db/errandspot-<time>-<label>.dump | sed '/^SET transaction_timeout = 0;$/d' |
+  LD_LIBRARY_PATH=~/pgsql18/lib ~/pgsql18/bin/psql -q -v ON_ERROR_STOP=1 --single-transaction
 ```
+
+Into a PostgreSQL 17 or newer (Neon), `pg_restore --no-owner --no-privileges --dbname=...` is
+enough.
 
 ## Logs
 
@@ -154,5 +175,21 @@ it, `pkill -f '^lsnode:/home/errandsp/errandspot/'` and the next request starts 
    # END errandspot force https
    ```
 
-5. Install the PostgreSQL 18 client tools into `~/pgsql18` (see the layout above) and the cron
+5. **Database:** create it and its user (names must start with the account name), then set
+   `DATABASE_URL` and `DIRECT_URL` in `.env` as in the Live setup above, and restore the latest
+   backup into it (see Backups):
+
+   ```sh
+   pw=$(openssl rand -hex 24) && echo "$pw"   # the PASSWORD below
+   uapi Postgresql create_database name=errandsp_errandspot
+   uapi Postgresql create_user name=errandsp_app password="$pw"
+   uapi Postgresql grant_all_privileges user=errandsp_app database=errandsp_errandspot
+   ```
+
+   ```
+   DATABASE_URL=postgresql://errandsp_app:PASSWORD@localhost:5432/errandsp_errandspot?schema=public&sslmode=disable&connection_limit=5
+   DIRECT_URL=postgresql://errandsp_app:PASSWORD@localhost:5432/errandsp_errandspot?schema=public&sslmode=disable
+   ```
+
+6. Install the PostgreSQL 18 client tools into `~/pgsql18` (see the layout above) and the cron
    jobs above (`crontab -e`).

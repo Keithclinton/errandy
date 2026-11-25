@@ -6,8 +6,8 @@ import { PrismaService } from "../prisma/prisma.service";
 
 /**
  * Used by deploys (to confirm the new version is the one answering) and by uptime checks.
- * The database is only queried with ?db=1: frequent checks would keep Neon's compute awake
- * around the clock and use up the free plan's compute hours.
+ * The database is only queried with ?db=1. The watchdog leaves it out: it restarts the app when
+ * the app stops answering, which wouldn't help if the database were the problem.
  */
 @ApiExcludeController()
 @Controller("health")

@@ -21,13 +21,9 @@ jobs:
     steps:
       - name: Check errandspot.com
         run: |
-          # The database only on the hour's first check: checking it every time would keep Neon's
-          # compute awake around the clock and use up the free plan's hours.
-          query=""
-          if [ "$(date -u +%M)" -lt 10 ]; then query="?db=1"; fi
           check() {
             curl -fsS -m 20 -o /dev/null -w "home page %{http_code} in %{time_total}s\n" https://errandspot.com/ &&
-              curl -fsS -m 20 -w "\n" "https://errandspot.com/api/health$query"
+              curl -fsS -m 20 -w "\n" "https://errandspot.com/api/health?db=1"
           }
           for attempt in 1 2 3; do
             if check; then exit 0; fi
