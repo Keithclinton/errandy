@@ -1,6 +1,7 @@
 #!/bin/bash
 # Run by cPanel Cron Jobs (see README.md):
 #   cron.sh reconcile-payments | digest   in place of vercel.json's crons
+#   cron.sh cleanup-photos                nightly: deletes uploaded photos nothing uses
 #   cron.sh watchdog                      every few minutes: keeps the app awake, restarts it if stuck
 cd "$(dirname "$0")" || exit 1
 SITE=https://errandspot.com

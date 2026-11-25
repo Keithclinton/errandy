@@ -1,20 +1,19 @@
 import { useRef, useState } from "react";
-import { put } from "@vercel/blob/client";
 import { X, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
-import { apiFetch, ApiError } from "@/lib/api-client";
+import { ApiError } from "@/lib/api-client";
+import { PHOTO_SIZES } from "@/lib/compress-photo";
+import { UnreadablePhotoError, uploadPhoto } from "@/lib/upload-photo";
 
 const DEFAULT_MAX_IMAGES = 8;
 
 export function ImageUploader({
   value,
   onChange,
-  uploadUrlEndpoint = "/listings/upload-url",
   maxImages = DEFAULT_MAX_IMAGES,
 }: {
   value: string[];
   onChange: (urls: string[]) => void;
-  uploadUrlEndpoint?: string;
   maxImages?: number;
 }) {
   const [uploading, setUploading] = useState(false);
@@ -25,20 +24,17 @@ export function ImageUploader({
     const remaining = maxImages - value.length;
     const selected = Array.from(files).slice(0, remaining);
     setUploading(true);
+    const uploaded: string[] = [];
     try {
-      const uploaded: string[] = [];
       for (const file of selected) {
-        const { clientToken, pathname } = await apiFetch<{ clientToken: string; pathname: string }>(
-          uploadUrlEndpoint,
-          { method: "POST", body: { filename: file.name, contentType: file.type } },
-        );
-        const blob = await put(pathname, file, { access: "public", token: clientToken, contentType: file.type });
-        uploaded.push(blob.url);
+        uploaded.push(await uploadPhoto(file, PHOTO_SIZES.photo));
       }
-      onChange([...value, ...uploaded]);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Couldn't upload one or more images.");
+      const message = err instanceof ApiError || err instanceof UnreadablePhotoError ? err.message : null;
+      toast.error(message ?? "Couldn't upload one or more photos.");
     } finally {
+      // Keep the photos that made it, even if a later one failed.
+      if (uploaded.length) onChange([...value, ...uploaded]);
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
     }

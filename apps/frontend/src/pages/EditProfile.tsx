@@ -91,12 +91,7 @@ export default function EditProfile() {
 
         <div className="space-y-2">
           <Label>Portfolio</Label>
-          <ImageUploader
-            value={portfolioUrls}
-            onChange={setPortfolioUrls}
-            uploadUrlEndpoint="/users/me/upload-url"
-            maxImages={6}
-          />
+          <ImageUploader value={portfolioUrls} onChange={setPortfolioUrls} maxImages={6} />
         </div>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>

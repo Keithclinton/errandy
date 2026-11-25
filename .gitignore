@@ -12,6 +12,7 @@ out/
 
 # NestJS backend
 apps/backend/dist/
+apps/backend/uploads/
 apps/backend/.env
 apps/backend/.env.*
 !apps/backend/.env.example

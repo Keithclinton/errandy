@@ -6,6 +6,9 @@
 # The database runs on this server, so its backups alone wouldn't survive losing the server or
 # the account. The daily one is also loaded into the Neon database in NEON_BACKUP_URL (the app's
 # database before 2026-11-25), which then holds a full working copy, at most a day old.
+# Each night it also copies the uploaded photos (UPLOADS_DIR) into ~/backups/photos/<date>, kept
+# 30 days. Photos never change, so each copy shares the unchanged ones with the night before and
+# only takes space for the new ones.
 # Restore: see README.md.
 set -uo pipefail
 umask 077
@@ -75,9 +78,34 @@ find "$DEST" -name 'errandspot-*.dump' -mtime +30 -delete
 find "$DEST" -name '*.part' -mmin +120 -delete
 log "ok $LABEL $(du -h "$file" | cut -f1) $(basename "$file")"
 
+[ "$LABEL" = daily ] || exit 0
+
+# The photos. A failure here is logged but doesn't stop the off-site copy below.
+copy_photos() {
+  local source dest today previous cutoff snapshot
+  source=$(grep '^UPLOADS_DIR=' "$HERE/.env" | tail -1 | cut -d= -f2- | tr -d "\"'")
+  [ -n "$source" ] || return 0 # not set up
+  [ -d "$source" ] || { log "FAILED photos: $source doesn't exist"; return 1; }
+  dest="$HOME/backups/photos"
+  today=$(date -u +%Y%m%d)
+  mkdir -p "$dest"
+  previous=$(find "$dest" -mindepth 1 -maxdepth 1 -type d -name '2*' ! -name "$today" | sort | tail -1)
+  rm -rf "$dest/$today.part"
+  rsync -a --exclude='*.part' ${previous:+--link-dest="$previous"} "$source/" "$dest/$today.part/" 2>"$DEST/.error" ||
+    { log "FAILED photos: $(tail -c 400 "$DEST/.error")"; return 1; }
+  rm -rf "${dest:?}/$today" && mv "$dest/$today.part" "$dest/$today"
+  rm -f "$DEST/.error"
+  # By the date in the name: rsync gives each copy the photo folder's own dates.
+  cutoff=$(date -u -d '30 days ago' +%Y%m%d)
+  for snapshot in "$dest"/2*; do
+    [ -d "$snapshot" ] && [[ "$(basename "$snapshot")" < "$cutoff" ]] && rm -rf "$snapshot"
+  done
+  log "ok photos $(find "$dest/$today" -type f -name '*.jpg' | wc -l) in $dest/$today"
+}
+copy_photos || echo "Photo backup failed" >&2
+
 # The off-site copy, from the daily backup. In one transaction, so if loading fails the copy
 # keeps the previous day's data.
-[ "$LABEL" = daily ] || exit 0
 offsite=$(connection NEON_BACKUP_URL)
 case $? in
   0) ;;

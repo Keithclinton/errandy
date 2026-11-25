@@ -19,6 +19,7 @@ import { AnalyticsModule } from "./analytics/analytics.module";
 import { EmailModule } from "./email/email.module";
 import { TokensModule } from "./tokens/tokens.module";
 import { HealthModule } from "./health/health.module";
+import { PhotosModule } from "./photos/photos.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { rateLimits } from "./common/rate-limits";
 
@@ -43,6 +44,7 @@ import { rateLimits } from "./common/rate-limits";
     AnalyticsModule,
     TokensModule,
     HealthModule,
+    PhotosModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

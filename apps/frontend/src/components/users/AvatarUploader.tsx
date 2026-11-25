@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
-import { put } from "@vercel/blob/client";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
-import { apiFetch, ApiError } from "@/lib/api-client";
+import { ApiError } from "@/lib/api-client";
+import { PHOTO_SIZES } from "@/lib/compress-photo";
+import { UnreadablePhotoError, uploadPhoto } from "@/lib/upload-photo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { initials } from "@/lib/format";
 
@@ -23,14 +24,10 @@ export function AvatarUploader({
     if (!file) return;
     setUploading(true);
     try {
-      const { clientToken, pathname } = await apiFetch<{ clientToken: string; pathname: string }>(
-        "/users/me/upload-url",
-        { method: "POST", body: { filename: file.name, contentType: file.type } },
-      );
-      const blob = await put(pathname, file, { access: "public", token: clientToken, contentType: file.type });
-      onChange(blob.url);
+      onChange(await uploadPhoto(file, PHOTO_SIZES.avatar));
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Couldn't upload that photo.");
+      const message = err instanceof ApiError || err instanceof UnreadablePhotoError ? err.message : null;
+      toast.error(message ?? "Couldn't upload that photo.");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

@@ -7,7 +7,6 @@ import { ListingsService } from "./listings.service";
 import { CreateListingDto } from "./dto/create-listing.dto";
 import { UpdateListingDto } from "./dto/update-listing.dto";
 import { QueryListingsDto } from "./dto/query-listings.dto";
-import { RequestUploadUrlDto } from "./dto/request-upload-url.dto";
 
 @ApiTags("listings")
 @Controller("listings")
@@ -37,14 +36,6 @@ export class ListingsController {
   @Patch(":id")
   update(@CurrentUser() user: AuthUser, @Param("id") id: string, @Body() dto: UpdateListingDto) {
     return this.listingsService.update(user.id, id, dto);
-  }
-
-  @ApiBearerAuth()
-  @Post("upload-url")
-  requestUploadUrl(@CurrentUser() user: AuthUser, @Body() dto: RequestUploadUrlDto) {
-    // Not nested under a listing id: images are uploaded before the listing exists
-    // (client uploads directly to Blob, then submits the resulting URLs on create).
-    return this.listingsService.requestUploadUrl(user.id, dto);
   }
 
   @ApiBearerAuth()

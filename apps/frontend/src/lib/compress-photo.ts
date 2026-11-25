@@ -1,6 +1,14 @@
-const MAX_DIMENSION = 1600;
-// The API takes up to 1 MB per photo; staying under this leaves room to spare.
-const TARGET_BYTES = 800_000;
+/** The size each kind of photo is shrunk to. The API takes up to 1 MB per photo. */
+export const PHOTO_SIZES = {
+  /** ID checks: still sharp enough to read an ID card. */
+  idCheck: { maxDimension: 1600, targetBytes: 800_000 },
+  /** Listing and portfolio photos: fills a phone or laptop screen, loads fast on mobile data. */
+  photo: { maxDimension: 1280, targetBytes: 350_000 },
+  /** Profile photos, only ever shown small. */
+  avatar: { maxDimension: 512, targetBytes: 120_000 },
+} as const;
+
+export type PhotoSize = (typeof PHOTO_SIZES)[keyof typeof PHOTO_SIZES];
 
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -38,18 +46,18 @@ function render(img: HTMLImageElement, maxDimension: number): HTMLCanvasElement 
 }
 
 /**
- * Turns a phone photo (often 3–10 MB) into a JPEG data URL under ~800 KB, at most 1600px on
- * its longest side: still sharp enough to read an ID card, small enough to upload quickly.
- * Throws if the browser can't read the file as an image.
+ * Turns a phone photo (often 3–10 MB) into a JPEG data URL of about `targetBytes` at most, no
+ * more than `maxDimension` pixels on its longest side (ID checks by default). Throws if the
+ * browser can't read the file as an image.
  */
-export async function compressPhoto(file: File): Promise<string> {
+export async function compressPhoto(file: File, { maxDimension, targetBytes }: PhotoSize = PHOTO_SIZES.idCheck): Promise<string> {
   const img = await loadImage(await readAsDataUrl(file));
-  for (const maxDimension of [MAX_DIMENSION, 1200]) {
-    const canvas = render(img, maxDimension);
+  for (const dimension of [maxDimension, Math.round(maxDimension * 0.75)]) {
+    const canvas = render(img, dimension);
     for (const quality of [0.85, 0.7, 0.55]) {
       const dataUrl = canvas.toDataURL("image/jpeg", quality);
-      if (dataUrlBytes(dataUrl) <= TARGET_BYTES) return dataUrl;
+      if (dataUrlBytes(dataUrl) <= targetBytes) return dataUrl;
     }
   }
-  return render(img, 1000).toDataURL("image/jpeg", 0.5);
+  return render(img, Math.round(maxDimension * 0.6)).toDataURL("image/jpeg", 0.5);
 }

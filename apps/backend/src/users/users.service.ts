@@ -1,20 +1,17 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { generateClientTokenFromReadWriteToken } from "@vercel/blob/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { ListingStatus } from "@prisma/client";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
-import { RequestUploadUrlDto } from "../listings/dto/request-upload-url.dto";
-import { sanitizeFilename } from "../common/sanitize-filename";
 import { AuthUser } from "../common/decorators/current-user.decorator";
 import { AccountBlocksService } from "../account-blocks/account-blocks.service";
+import { PhotosService } from "../photos/photos.service";
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
     private readonly accountBlocks: AccountBlocksService,
+    private readonly photos: PhotosService,
   ) {}
 
   async findById(id: string) {
@@ -53,23 +50,16 @@ export class UsersService {
   }
 
   async updateProfile(id: string, dto: UpdateProfileDto) {
+    if (dto.avatarUrl !== undefined || dto.portfolioUrls !== undefined) {
+      const current = await this.prisma.user.findUnique({ where: { id }, select: { avatarUrl: true, portfolioUrls: true } });
+      if (!current) throw new NotFoundException("User not found");
+      // The photo Google gave an account at sign-up stays allowed: it's already on the profile.
+      if (dto.avatarUrl) await this.photos.assertUsable(id, [dto.avatarUrl], [current.avatarUrl]);
+      if (dto.portfolioUrls) await this.photos.assertUsable(id, dto.portfolioUrls, current.portfolioUrls);
+    }
     const user = await this.prisma.user.update({ where: { id }, data: dto });
     const { passwordHash, refreshTokenHash, passwordResetTokenHash, ...safe } = user;
     return safe;
-  }
-
-  async requestUploadUrl(userId: string, dto: RequestUploadUrlDto) {
-    const token = this.config.get<string>("BLOB_READ_WRITE_TOKEN");
-    if (!token) {
-      throw new BadRequestException("Image storage is not configured yet");
-    }
-    const pathname = `users/${userId}/portfolio/${Date.now()}-${sanitizeFilename(dto.filename)}`;
-    const clientToken = await generateClientTokenFromReadWriteToken({
-      token,
-      pathname,
-      allowedContentTypes: [dto.contentType],
-    });
-    return { clientToken, pathname };
   }
 
   /** A user deleting their own account. Admin accounts can only be deleted by the super admin. */
@@ -122,6 +112,8 @@ export class UsersService {
       await tx.tokenPurchase.deleteMany({ where: { userId } });
       await tx.user.delete({ where: { id: userId } });
     });
+    // Only once the account is really gone: deleting files can't be rolled back.
+    await this.photos.removeAccountPhotos(userId);
 
     return { ok: true };
   }

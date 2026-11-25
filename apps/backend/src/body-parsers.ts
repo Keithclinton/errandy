@@ -4,6 +4,9 @@ import { json, urlencoded } from "express";
 /** ID check photos are sent inline as base64, so this one route takes a bigger body. */
 export const ID_VERIFICATION_PATH = "/kyc/id-verification";
 const ID_VERIFICATION_BODY_LIMIT = "5mb";
+/** So does uploading a photo (one, up to 1 MB). */
+export const PHOTO_UPLOAD_PATH = "/photos";
+const PHOTO_UPLOAD_BODY_LIMIT = "2mb";
 
 /**
  * Shared by the real app and the e2e tests. Nest's own body parser is disabled so the JSON
@@ -12,6 +15,7 @@ const ID_VERIFICATION_BODY_LIMIT = "5mb";
 export function applyBodyParsers(app: INestApplication): void {
   // Must come first: once a parser has read the body, the general one below skips it.
   app.use(ID_VERIFICATION_PATH, json({ limit: ID_VERIFICATION_BODY_LIMIT }));
+  app.use(PHOTO_UPLOAD_PATH, json({ limit: PHOTO_UPLOAD_BODY_LIMIT }));
   app.use(
     json({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

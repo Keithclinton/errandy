@@ -1,31 +1,29 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { generateClientTokenFromReadWriteToken } from "@vercel/blob/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { ListingStatus, Prisma } from "@prisma/client";
 import { CreateListingDto } from "./dto/create-listing.dto";
 import { UpdateListingDto } from "./dto/update-listing.dto";
 import { QueryListingsDto } from "./dto/query-listings.dto";
-import { RequestUploadUrlDto } from "./dto/request-upload-url.dto";
 import { EVENTS, ListingCreatedEvent, ListingCompletedEvent } from "../common/events/domain-events";
-import { sanitizeFilename } from "../common/sanitize-filename";
 import { TokensService } from "../tokens/tokens.service";
 import { RatingsService } from "../ratings/ratings.service";
+import { PhotosService } from "../photos/photos.service";
 import { TokenTransactionType } from "@prisma/client";
 
 @Injectable()
 export class ListingsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
     private readonly events: EventEmitter2,
     private readonly tokensService: TokensService,
     private readonly ratingsService: RatingsService,
+    private readonly photos: PhotosService,
   ) {}
 
   async create(ownerId: string, dto: CreateListingDto) {
     await this.ratingsService.assertNoUnratedCompletedListings(ownerId);
+    await this.photos.assertUsable(ownerId, dto.imageUrls ?? []);
     const listing = await this.prisma.$transaction(async (tx) => {
       const listing = await tx.listing.create({
         data: {
@@ -142,21 +140,8 @@ export class ListingsService {
     if (listing.status !== ListingStatus.open) {
       throw new BadRequestException("Only open listings can be edited");
     }
+    if (dto.imageUrls) await this.photos.assertUsable(userId, dto.imageUrls, listing.imageUrls);
     return this.prisma.listing.update({ where: { id }, data: dto });
-  }
-
-  async requestUploadUrl(userId: string, dto: RequestUploadUrlDto) {
-    const token = this.config.get<string>("BLOB_READ_WRITE_TOKEN");
-    if (!token) {
-      throw new BadRequestException("Image storage is not configured yet");
-    }
-    const pathname = `listings/${userId}/${Date.now()}-${sanitizeFilename(dto.filename)}`;
-    const clientToken = await generateClientTokenFromReadWriteToken({
-      token,
-      pathname,
-      allowedContentTypes: [dto.contentType],
-    });
-    return { clientToken, pathname };
   }
 
   async markCompleted(userId: string, id: string) {

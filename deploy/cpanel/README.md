@@ -14,6 +14,12 @@ host's PostgreSQL serves every account on the server and allows 100 connections 
 app's `DATABASE_URL` ends in `&connection_limit=5`. Before that it was Neon (US), which now holds
 the off-site copy (see Backups).
 
+Uploaded photos (since 2026-11-25; before that, Vercel Blob) are files in
+`~/public_html/uploads/<account id>/`, which LiteSpeed sends straight from disk as
+`https://errandspot.com/uploads/...` without involving the app. The app stores them there
+(`UPLOADS_DIR` in `.env`), checks that listings and profiles only use their own, deletes an
+account's folder with the account, and every night deletes photos nothing has used for a day.
+
 ## Updating
 
 **Automatically:** push to `main`. CI runs the tests, builds the package and publishes it on the
@@ -50,7 +56,10 @@ add tables and columns; drop or rename them only in a later release.
   Install**: deploys install packages themselves.
 - `~/errandspot/.env`: the settings. Edit it there, then restart (deploys copy it forward).
   `DATABASE_URL` and `DIRECT_URL` point at the local database, `NEON_BACKUP_URL` at the off-site
-  copy.
+  copy, `UPLOADS_DIR` at the photos.
+- `~/public_html/uploads`: the photos, outside the app's folder so deploys leave them alone. Its
+  `.htaccess` (see Setting up a new server) makes browsers keep each photo for good and refuses
+  anything that isn't one.
 - `~/releases`: previous versions, `deploy.log`, `watchdog.log`.
 - `~/bin/errandspot-deploy`: the deploy script (`deploy.sh`; each deploy refreshes it).
 - `~/pgsql18`: PostgreSQL 18 client tools, unpacked from the PGDG packages for RHEL 9
@@ -71,7 +80,8 @@ and after a restart it leaves the old process idling, holding part of the 100-pr
 */4 * * * *  cron.sh watchdog             # keeps the app awake; restarts it if it stops answering
 */2 * * * *  errandspot-deploy pull       # installs new builds
 15 * * * *   backup.sh hourly
-30 23 * * *  backup.sh daily              # 02:30 in Nairobi; also refreshes the off-site copy
+30 23 * * *  backup.sh daily              # 02:30 in Nairobi; also the photos and the off-site copy
+45 0 * * *   cron.sh cleanup-photos       # after the night's backup, so it holds what this deletes
 ```
 
 The host adds a random delay of up to a minute to each job and sets `MAILTO=""`. To get an email
@@ -84,8 +94,13 @@ answering, which wouldn't help if the database were the problem.
 
 `backup.sh` writes `~/backups/db/errandspot-<time>-<label>.dump` (pg_dump's custom format) every
 hour, every night and before each deploy that brings migrations, and checks that the file reads
-back. Hourly ones are kept 2 days, the rest 30. Results go to `~/backups/db/backup.log`. Photos
-aren't included: they live in Vercel Blob.
+back. Hourly ones are kept 2 days, the rest 30. Results go to `~/backups/db/backup.log`.
+
+Each night it also copies the photos into `~/backups/photos/<date>`, kept 30 days. Photos never
+change, so each night's copy shares the photos it has in common with the night before (hard
+links) and only takes space for new ones. To put them back:
+`rsync -a ~/backups/photos/<date>/ ~/public_html/uploads/`. The photos have no off-site copy: if
+the server were lost, the off-site database would still list them, but they'd be gone.
 
 These backups are on the same server as the database, so each night's is also loaded into the
 Neon database in `NEON_BACKUP_URL`: a full working copy, at most a day old, off this server. If the
@@ -137,8 +152,8 @@ it, `pkill -f '^lsnode:/home/errandsp/errandspot/'` and the next request starts 
 
 1. In cPanel: **SSH Access** → import or generate a key and authorize it.
 2. Build with the production settings (delete `prod.env` afterwards; the package then holds
-   secrets, so keep it private). Vercel hides "sensitive" values such as `BLOB_READ_WRITE_TOKEN`:
-   add those to the server's `.env` by hand.
+   secrets, so keep it private). Vercel hides "sensitive" values such as API keys: add those to
+   the server's `.env` by hand.
 
    ```sh
    npx vercel env pull prod.env --environment=production
@@ -191,5 +206,22 @@ it, `pkill -f '^lsnode:/home/errandsp/errandspot/'` and the next request starts 
    DIRECT_URL=postgresql://errandsp_app:PASSWORD@localhost:5432/errandsp_errandspot?schema=public&sslmode=disable
    ```
 
-6. Install the PostgreSQL 18 client tools into `~/pgsql18` (see the layout above) and the cron
+6. **Photos:** add `UPLOADS_DIR=/home/<account>/public_html/uploads` to `.env`, restore them from
+   the latest copy (see Backups) or create the folder, and put this in
+   `~/public_html/uploads/.htaccess`:
+
+   ```
+   # Uploaded photos (see deploy/cpanel/README.md). Each name is used once, so browsers may keep it.
+   Options -Indexes
+   <IfModule mod_headers.c>
+     Header always set X-Content-Type-Options "nosniff"
+     Header always set Cache-Control "public, max-age=31536000, immutable"
+   </IfModule>
+   # Nothing else is served from here.
+   <FilesMatch "^(?![A-Za-z0-9_-]{16}\.jpg$)">
+     Require all denied
+   </FilesMatch>
+   ```
+
+7. Install the PostgreSQL 18 client tools into `~/pgsql18` (see the layout above) and the cron
    jobs above (`crontab -e`).

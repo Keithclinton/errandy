@@ -56,8 +56,10 @@ site.use(
   }),
 );
 
-// A missing build file is a real 404, not the app's page.
+// A missing build file is a real 404, not the app's page. So is a missing photo: LiteSpeed sends
+// the ones that exist straight from UPLOADS_DIR (~/public_html/uploads) without asking the app.
 site.use("/assets", (_req, res) => res.status(404).end());
+site.use("/uploads", (_req, res) => res.status(404).end());
 
 // Every other address is a page of the React app, which works out the route itself.
 site.get("*", (_req, res) => {
